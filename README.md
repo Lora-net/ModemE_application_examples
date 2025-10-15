@@ -2,7 +2,9 @@
 
 ## 1. Description
 
-The LR1121 modem application example project contains several simple examples highlighting LoRa Basic Modem-E features.
+The LR1121 modem application example project contains several simple examples highlighting LoRa Basic Modem-E features.  
+This version of the examples supports LoRa Basics™ Modem-E **v2.0.2**.
+
 
 ### 1.1. Simple LoRaWAN Class A application
 
@@ -41,18 +43,48 @@ The example applications are designed to run with the LR1121 Evaluation Kit hard
 * NUCLEO-L476RG development board
 * LR1121 shield
 
+This project supports both versions of the LR1121 shield **with TCXO or without TCXO**
+
+### 2.1. TCXO Configuration
+
+To enable support for TCXO-based shields, you must modify the TCXO configuration macros in the [board-config.h](Inc/boards/board-config.h) file:
+
+**Basic TCXO Enable/Disable:**
+- Set `TCXO_ON_BOARD` to `1` if your shield includes a TCXO, or leave it as `0` (default) for non-TCXO boards.
+
+**Advanced TCXO Parameters (configurable when `TCXO_ON_BOARD = 1`):**
+- `BOARD_TCXO_SUPPLY_VOLTAGE`: Configure the TCXO supply voltage. Available options:
+  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_1_6V` (1.6V)
+  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_1_7V` (1.7V)
+  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_1_8V` (1.8V) - **Default**
+  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_2_2V` (2.2V)
+  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_2_4V` (2.4V)
+  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_2_7V` (2.7V)
+  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_3_0V` (3.0V)
+  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V` (3.3V)
+
+- `BOARD_TCXO_WAKEUP_TIME`: Configure the TCXO wakeup time in milliseconds (default: 8ms)
+
+**Example configuration for a 3.3V TCXO with 10ms wakeup time:**
+```c
+#define TCXO_ON_BOARD 1
+#define BOARD_TCXO_SUPPLY_VOLTAGE LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V
+#define BOARD_TCXO_WAKEUP_TIME 10
+```
+
 ## 3. Usage
 
 Connect the NUCLEO board to a host PC via a USB cable. The USB connection will provide power for the LR1121 Evaluation Kit as well as serve as a serial communication link for the example application.
 
 Use a terminal application configured with the following settings:
+
 - Speed: 921600 baud
 - Data bits: 8s
 - Stop bits: 1
 - Parity: None
 
 Applications use the serial link to display information messages.  
-Modem keys are defined in [lorawan_comissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h).  
+Modem keys are defined in [lorawan_commissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h).
 To use the LR1121 modem production keys, update the USE_LR11XX_CREDENTIALS definition
 
 ## 4. Build & Install
@@ -61,12 +93,48 @@ To build the example application for the STM32L476RG controller of the NUCLEO de
 
 To build the example applications with the GNU Arm Embedded Toolchain:
 
-
 1. Run `make` from the `gcc` directory with the target application name as an argument:
 
 ```
 $ make APP=lorawan
 ```
+
+It is possible to provide additional compile-time definition through usage of `EXTRAFLAGS` make argument as follows:
+
+```
+$ make APP=lorawan EXTRAFLAGS='-D<TOKEN>=<VALUE>'
+```
+
+Where `<TOKEN>` is a macro name to configure with `<VALUE>`, for instance:
+
+```bash
+$ make APP=lorawan EXTRAFLAGS='-DLORAWAN_REGION_USED=LR1121_LORAWAN_REGION_EU868'
+```
+
+**Example: Building with TCXO configuration:**
+```bash
+$ make APP=lorawan EXTRAFLAGS='-DTCXO_ON_BOARD=1 -DBOARD_TCXO_SUPPLY_VOLTAGE=LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V -DBOARD_TCXO_WAKEUP_TIME=10'
+```
+
+Here is the list of configurable tokens:
+
+**Application Configuration:**
+* `WATCHDOG_RELOAD_PERIOD_MS`
+* `LORAWAN_APP_DATA_MAX_SIZE`
+* `LORAWAN_REGION_USED`
+* `PERIODICAL_UPLINK_DELAY_S`
+
+**LoRaWAN Credentials:**
+* `USE_LR11XX_CREDENTIALS`
+* `LORAWAN_DEVICE_EUI`
+* `LORAWAN_JOIN_EUI`
+* `LORAWAN_NWK_KEY`
+* `LORAWAN_APP_KEY`
+
+**TCXO Configuration:**
+* `TCXO_ON_BOARD` (set to 1 to enable TCXO support)
+* `BOARD_TCXO_SUPPLY_VOLTAGE` (e.g., `LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V`)
+* `BOARD_TCXO_WAKEUP_TIME` (wakeup time in milliseconds)
 
 Note: The supported application names are `lorawan`, `certification`, `class_b`, `multicast` and `fuota`.
 

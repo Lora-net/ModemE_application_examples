@@ -55,6 +55,7 @@
 #include "apps_utilities.h"
 #include "lr1121_modem_system_types.h"
 #include "lr1121_modem_helper.h"
+#include "common_app_configuration.h"
 
 /*
  * -----------------------------------------------------------------------------
@@ -111,39 +112,7 @@
         }                                                                                      \
     } while( 0 )
 
-/**
- * @brief Watchdog counter reload value during sleep (The period must be lower than MCU watchdog period (here 20s))
- */
-#define WATCHDOG_RELOAD_PERIOD_MS 20000
-
-/**
- * @brief Periodical uplink alarm delay in seconds
- */
-#define PERIODICAL_UPLINK_DELAY_S 30
-
 #define EXTI_BUTTON PC_13
-
-/**
- * @brief User application data buffer size
- */
-#define LORAWAN_APP_DATA_MAX_SIZE 242
-
-/*!
- * @brief LoRaWAN regulatory region.
- * One of:
- * LR1121_LORAWAN_REGION_AS923_GRP1
- * LR1121_LORAWAN_REGION_AS923_GRP2
- * LR1121_LORAWAN_REGION_AS923_GRP3
- * LR1121_LORAWAN_REGION_AS923_GRP4
- * LR1121_LORAWAN_REGION_AU915
- * LR1121_LORAWAN_REGION_CN470
- * LR1121_LORAWAN_REGION_EU868
- * LR1121_LORAWAN_REGION_IN865
- * LR1121_LORAWAN_REGION_KR920
- * LR1121_LORAWAN_REGION_RU864
- * LR1121_LORAWAN_REGION_US915
- */
-#define LORAWAN_REGION_USED LR1121_LORAWAN_REGION_EU868
 
 /*
  * -----------------------------------------------------------------------------
@@ -226,6 +195,13 @@ static lr1121_modem_response_code_t send_frame( const uint8_t* tx_frame_buffer, 
  *
  */
 static void event_process( void* context );
+
+/**
+ * @brief Set credentials and region
+ * 
+*/
+static void set_credentials_and_region(void* context);
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC FUNCTIONS DEFINITION ---------------------------------------------
@@ -261,18 +237,14 @@ int main( void )
     };
     hal_gpio_init_in( lr1121.event.pin, HAL_GPIO_PULL_MODE_NONE, HAL_GPIO_IRQ_MODE_RISING, &event_callback );
 
-    // Flush events before enabling irq
-    lr1121_modem_board_event_flush( &lr1121 );
+    lr1121_modem_system_reboot( &lr1121, false );
 
     // Init done: enable interruption
     hal_mcu_enable_irq( );
+    HAL_DBG_TRACE_MSG( "Initialization done\n\n" );
 
     /* Board is initialized */
     leds_blink( LED_TX_MASK, 100, 20, true );
-    HAL_DBG_TRACE_MSG( "Initialization done\n\n" );
-
-    lr1121_modem_system_reboot( &lr1121, false );
-
     while( 1 )
     {
         // Check button
@@ -314,10 +286,9 @@ static void event_process( void* context )
             case LR1121_MODEM_LORAWAN_EVENT_RESET:
 
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: RESET\n\n", HAL_DBG_TRACE_COLOR_BLUE );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_system_cfg_lfclk( context, LR1121_MODEM_SYSTEM_LFCLK_XTAL, true ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_crystal_error( context, 50 ) );
-
+                ASSERT_SMTC_MODEM_RC( lr1121_modem_board_init(context));
                 get_and_print_crashlog( context );
+
                 ASSERT_SMTC_MODEM_RC( lr1121_modem_get_certification_mode(
                     context, ( lr1121_modem_certification_mode_t* ) &certif_running ) );
                 print_certification( certif_running );
@@ -325,27 +296,7 @@ static void event_process( void* context )
                 set the credentials if needed, print them, and launch the join procedure */
                 if( certif_running == LR1121_MODEM_CERTIFICATION_MODE_DISABLE )
                 {
-#if( !USE_LR11XX_CREDENTIALS )
-                    // Set user credentials
-                    HAL_DBG_TRACE_INFO( "###### ===== LR1121 SET EUI and KEYS ==== ######\n\n" );
-                    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_dev_eui( context, user_dev_eui ) );
-                    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_join_eui( context, user_join_eui ) );
-                    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_app_key( context, user_app_key ) );
-                    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_nwk_key( context, user_nwk_key ) );
-                    uint8_t tmp_pin[4] = { 0 };  // The chip_pin is not used if we use custom credentials
-                    print_lorawan_credentials( user_dev_eui, user_join_eui, tmp_pin, USE_LR11XX_CREDENTIALS );
-#else
-                    // Get internal credentials
-                    uint8_t tmp_join_eui[8] = { 0 };
-                    ASSERT_SMTC_MODEM_RC( lr1121_modem_system_read_uid( context, chip_eui ) );
-                    ASSERT_SMTC_MODEM_RC( lr1121_modem_system_read_pin( context, chip_pin ) );
-                    ASSERT_SMTC_MODEM_RC( lr1121_modem_get_join_eui( context, tmp_join_eui ) );
-                    print_lorawan_credentials( chip_eui, tmp_join_eui, chip_pin, USE_LR11XX_CREDENTIALS );
-#endif
-                    // Set user region
-                    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_region( context, LORAWAN_REGION_USED ) );
-                    print_lorawan_region( LORAWAN_REGION_USED );
-
+                    set_credentials_and_region(context);
                     // Schedule a LoRaWAN network JoinRequest.
                     ASSERT_SMTC_MODEM_RC( lr1121_modem_join( context ) );
                     HAL_DBG_TRACE_INFO( "###### ===== JOINING ==== ######\n\n\n" );
@@ -353,11 +304,14 @@ static void event_process( void* context )
                 // Otherwise, just print the credentials
                 else
                 {
+                    uint8_t tmp_join_eui[8] = { 0 };
 #if( !USE_LR11XX_CREDENTIALS )
                     uint8_t tmp_pin[4] = { 0 };  // The chip_pin is not used if we use custom credentials
-                    print_lorawan_credentials( user_dev_eui, user_join_eui, tmp_pin, USE_LR11XX_CREDENTIALS );
+                    uint8_t tmp_dev_eui[8] = { 0 };
+                    ASSERT_SMTC_MODEM_RC( lr1121_modem_get_dev_eui( context, tmp_dev_eui ) );
+                    ASSERT_SMTC_MODEM_RC( lr1121_modem_get_join_eui( context, tmp_join_eui ) );
+                    print_lorawan_credentials( tmp_dev_eui, tmp_join_eui, tmp_pin, USE_LR11XX_CREDENTIALS );
 #else
-                    uint8_t tmp_join_eui[8] = { 0 };
                     ASSERT_SMTC_MODEM_RC( lr1121_modem_system_read_uid( context, chip_eui ) );
                     ASSERT_SMTC_MODEM_RC( lr1121_modem_system_read_pin( context, chip_pin ) );
                     ASSERT_SMTC_MODEM_RC( lr1121_modem_get_join_eui( context, tmp_join_eui ) );
@@ -366,20 +320,38 @@ static void event_process( void* context )
                     lr1121_modem_regions_t modem_region = LR1121_LORAWAN_REGION_EU868;  // Init to EU868
                     get_and_print_lorawan_region_from_modem( context, &modem_region );
 
-                    // If the region configured in the Modem-E is different from the one of this running code, there is
-                    // a mis-alignment between Modem-E and the application.
-                    // This is typically a symptom of a non-stopped certification mode before re-flash with
-                    // certification binary of another region
-                    // In this case a join process on the wrong region is probably on-going: here it is stopped by
-                    // calling "leave_network"
-                    if( modem_region != LORAWAN_REGION_USED )
+                    // Check for alignment between the region and JoinEUI configured in the Modem-E and those expected by the application.
+                    // There are two possible mismatches:
+                    // 1. The region configured in the Modem-E differs from the one used by the application (LORAWAN_REGION_USED).
+                    // 2. The JoinEUI stored in the Modem-E differs from the one expected by the application,
+                    //    and the application is not using LR11XX default credentials (USE_LR11XX_CREDENTIALS == false).
+                    // This typically indicates that the certification mode from a different region was not properly stopped
+                    // before flashing a new firmware.
+                    // In such cases, the ongoing join process must be stopped, the correct region and credentials must be set,
+                    // and the certification mode must be restarted.
+                    if( (modem_region != LORAWAN_REGION_USED) || 
+                        ((memcmp(user_join_eui, tmp_join_eui, sizeof(user_join_eui)) != 0) && (!USE_LR11XX_CREDENTIALS)) )
                     {
-                        lr1121_modem_leave_network( context );
                         HAL_DBG_TRACE_ERROR(
-                            "Region mismatch between Modem-E (0x%02x) and application (0x%02x). Stop join "
-                            "process...\n", modem_region, LORAWAN_REGION_USED );
-                        HAL_DBG_TRACE_INFO(
-                            "  -> Possible workaround is: disable certification, reset, enable certification\n" )
+                            "Configuration mismatch:\n"
+                            "- Region Modem-E: 0x%02x vs App: 0x%02x\n"
+                            "- JoinEUI match: %s\n"
+                            "- Using LR11XX credentials: %s\n",
+                            modem_region, LORAWAN_REGION_USED,
+                            (memcmp(user_join_eui, tmp_join_eui, sizeof(user_join_eui)) == 0) ? "YES" : "NO",
+                            USE_LR11XX_CREDENTIALS ? "YES" : "NO" );
+
+                        HAL_DBG_TRACE_MSG("Mismatch detected, stopping join process...\n");
+                        lr1121_modem_leave_network( context );
+
+                        HAL_DBG_TRACE_MSG("Disabling certification mode...\n");
+                        lr1121_modem_set_certification_mode( context, LR1121_MODEM_CERTIFICATION_MODE_DISABLE );
+
+                        HAL_DBG_TRACE_MSG("Reconfiguring credentials and region...\n\n");
+                        set_credentials_and_region( context );
+
+                        HAL_DBG_TRACE_MSG("Re-enabling certification mode...\n");
+                        lr1121_modem_set_certification_mode( context, LR1121_MODEM_CERTIFICATION_MODE_ENABLE );
                     }
                 }
                 break;
@@ -402,6 +374,7 @@ static void event_process( void* context )
             case LR1121_MODEM_LORAWAN_EVENT_JOINED:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: JOINED\n", HAL_DBG_TRACE_COLOR_BLUE );
                 HAL_DBG_TRACE_INFO( "Modem is now joined \n\n" );
+
 
                 uint8_t adr_custom_list[16] = { 0 };
                 ASSERT_SMTC_MODEM_RC( lr1121_modem_set_adr_profile(
@@ -510,6 +483,31 @@ static void event_process( void* context )
             }
         }
     } while( rc_event != LR1121_MODEM_RESPONSE_CODE_NO_EVENT );
+}
+
+static void set_credentials_and_region(void* context)
+{
+#if( !USE_LR11XX_CREDENTIALS )
+    // Set user credentials
+    HAL_DBG_TRACE_INFO( "###### ===== LR1121 SET EUI and KEYS ==== ######\n\n" );
+    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_dev_eui( context, user_dev_eui ) );
+    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_join_eui( context, user_join_eui ) );
+    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_app_key( context, user_app_key ) );
+    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_nwk_key( context, user_nwk_key ) );
+    uint8_t tmp_pin[4] = { 0 };  // The chip_pin is not used if we use custom credentials
+    print_lorawan_credentials( user_dev_eui, user_join_eui, tmp_pin, USE_LR11XX_CREDENTIALS );
+#else
+    // Get internal credentials
+    uint8_t tmp_join_eui[8] = { 0 };
+    ASSERT_SMTC_MODEM_RC( lr1121_modem_system_read_uid( context, chip_eui ) );
+    ASSERT_SMTC_MODEM_RC( lr1121_modem_system_read_pin( context, chip_pin ) );
+    ASSERT_SMTC_MODEM_RC( lr1121_modem_get_join_eui( context, tmp_join_eui ) );
+    print_lorawan_credentials( chip_eui, tmp_join_eui, chip_pin, USE_LR11XX_CREDENTIALS );
+#endif
+    // Set user region
+    ASSERT_SMTC_MODEM_RC( lr1121_modem_set_region( context, LORAWAN_REGION_USED ) );
+    print_lorawan_region( LORAWAN_REGION_USED );
+
 }
 
 static void user_button_callback( void* context )

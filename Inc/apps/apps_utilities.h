@@ -79,6 +79,14 @@ extern "C" {
 void print_hex_buffer( const uint8_t* buffer, uint8_t size );
 
 /**
+ * @brief Prints the provided buffer as ASCII characters
+ *
+ * @param [in] buffer Buffer to be printed
+ * @param [in] size Buffer size to be printed
+ */
+void print_ascii_buffer( const uint8_t* buffer, uint16_t size );
+
+/**
  * @brief Prints the LoRaWAN keys
  *
  * @param [in] dev_eui Device EUI to be printed

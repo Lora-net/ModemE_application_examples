@@ -54,6 +54,7 @@
 #include "apps_utilities.h"
 #include "lr1121_modem_helper.h"
 #include "lr1121_modem_system_types.h"
+#include "common_app_configuration.h"
 
 /*
  * -----------------------------------------------------------------------------
@@ -110,39 +111,7 @@
         }                                                                                      \
     } while( 0 )
 
-/**
- * @brief Watchdog counter reload value during sleep (The period must be lower than MCU watchdog period (here 20s))
- */
-#define WATCHDOG_RELOAD_PERIOD_MS 20000
-
-/**
- * @brief Periodical uplink alarm delay in seconds
- */
-#define PERIODICAL_UPLINK_DELAY_S 30
-
 #define EXTI_BUTTON PC_13
-
-/*!
- * @brief User application data buffer size
- */
-#define LORAWAN_APP_DATA_MAX_SIZE 242
-
-/*!
- * @brief LoRaWAN regulatory region.
- * One of:
- * LR1121_LORAWAN_REGION_AS923_GRP1
- * LR1121_LORAWAN_REGION_AS923_GRP2
- * LR1121_LORAWAN_REGION_AS923_GRP3
- * LR1121_LORAWAN_REGION_AS923_GRP4
- * LR1121_LORAWAN_REGION_AU915
- * LR1121_LORAWAN_REGION_CN470
- * LR1121_LORAWAN_REGION_EU868
- * LR1121_LORAWAN_REGION_IN865
- * LR1121_LORAWAN_REGION_KR920
- * LR1121_LORAWAN_REGION_RU864
- * LR1121_LORAWAN_REGION_US915
- */
-#define LORAWAN_REGION_USED LR1121_LORAWAN_REGION_EU868
 
 /*
  * -----------------------------------------------------------------------------
@@ -249,16 +218,14 @@ int main( void )
     };
     hal_gpio_init_in( lr1121.event.pin, HAL_GPIO_PULL_MODE_NONE, HAL_GPIO_IRQ_MODE_RISING, &event_callback );
 
-    // Flush events before enabling irq
-    lr1121_modem_board_event_flush( &lr1121 );
+    lr1121_modem_system_reboot( &lr1121, false );
 
     // Init done: enable interruption
     hal_mcu_enable_irq( );
+    HAL_DBG_TRACE_MSG( "Initialization done\n\n" );
 
     /* Board is initialized */
     leds_blink( LED_TX_MASK, 100, 20, true );
-    HAL_DBG_TRACE_MSG( "Initialization done\n\n" );
-    lr1121_modem_system_reboot( &lr1121, false );
 
     while( 1 )
     {
@@ -322,10 +289,9 @@ static void event_process( void* context )
             case LR1121_MODEM_LORAWAN_EVENT_RESET:
 
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: RESET\n\n", HAL_DBG_TRACE_COLOR_BLUE );
-
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_system_cfg_lfclk( context, LR1121_MODEM_SYSTEM_LFCLK_XTAL, true ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_crystal_error( context, 50 ) );
+                ASSERT_SMTC_MODEM_RC( lr1121_modem_board_init(context));
                 get_and_print_crashlog( context );
+
 #if( !USE_LR11XX_CREDENTIALS )
                 // Set user credentials
                 HAL_DBG_TRACE_INFO( "###### ===== LR1121 SET EUI and KEYS ==== ######\n\n" );
@@ -367,7 +333,7 @@ static void event_process( void* context )
                 uint8_t adr_custom_list[16] = { 0 };
                 ASSERT_SMTC_MODEM_RC( lr1121_modem_set_adr_profile(
                     context, LR1121_MODEM_ADR_PROFILE_NETWORK_SERVER_CONTROLLED, adr_custom_list ) );
-
+                    
                 // Send first periodical uplink on port 101
                 send_uplinks_counter_on_port( 101 );
                 // start periodical uplink alarm

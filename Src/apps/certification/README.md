@@ -1,4 +1,4 @@
-# Certification Application 
+# Certification Application
 
 This example allows enabling or disabling certification mode, allowing the launch of the certification procedure with LCTT (LoRaWAN Certification Test Tool).
 
@@ -12,11 +12,11 @@ Pressing the blue button again disables the certification mode, leaves the netwo
 
 This example is intended to be used with the LCTT. We recommend using unique credentials configured in LCTT (to avoid joining a real Network Server) and activating the certification mode (by pressing the blue button on the Nucleo board) before running the tests on LCTT.
 
-## 2. Configuration 
+## 2. Configuration
 
 ### 2.1. LoRaWAN configuration
 
-Several constants are defined at the top of `main_certification.c`, their values can be set to define the LoRaWAN configuration of the application.
+Several constants are defined at the top of `main_certification.c`, `common_app_configuration.h`, or `lorawan_commissioning.h`. Their values can be set to define the LoRaWAN configuration of the application.
 
 | Constant              | Comments |
 | --------------------- | -------- |
@@ -39,6 +39,7 @@ Supported values for `LORAWAN_REGION_USED`:
 * `LR1121_LORAWAN_REGION_KR920`
 * `LR1121_LORAWAN_REGION_RU864`
 * `LR1121_LORAWAN_REGION_US915`
+* `LR1121_LORAWAN_REGION_WW2G4`
 
 
 ### 2.2. Join configuration
@@ -74,5 +75,3 @@ The application follows a relatively simple state machine based on the reception
 - Alarm event: Sends the number of uplinks sent and the number of uplinks confirmed in an uplink on port 101 and reconfigures the alarm.
 
 Pressing the blue button disables the alarm and enables the certification mode.  
-
-

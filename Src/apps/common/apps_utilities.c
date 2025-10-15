@@ -104,6 +104,27 @@ void print_hex_buffer( const uint8_t* buffer, uint8_t size )
     HAL_DBG_TRACE_PRINTF( "\n\n" );
 }
 
+void print_ascii_buffer( const uint8_t* buffer, uint16_t size )
+{
+    HAL_DBG_TRACE_PRINTF( "Crashlog: " );
+    for( uint16_t i = 0; i < size; i++ )
+    {
+        if( buffer[i] >= ' ' && buffer[i] <= '~' )
+        {
+            HAL_DBG_TRACE_PRINTF( "%c", buffer[i] );
+        }
+        else if( buffer[i] == 0x00 )
+        {
+            break;
+        }
+        else
+        {
+            HAL_DBG_TRACE_PRINTF( "." );
+        }
+    }
+    HAL_DBG_TRACE_PRINTF( "\n\n" );
+}
+
 void print_version( lr1121_modem_version_t modem_version )
 {
     HAL_DBG_TRACE_INFO( "###### ===== lr1121 MODEM-E VERSION ==== ######\n\n\n" );
@@ -251,6 +272,11 @@ void print_lorawan_region( lr1121_modem_regions_t region )
         HAL_DBG_TRACE_MSG( "REGION      : RU864\n\n\n" );
         break;
     }
+    case LR1121_LORAWAN_REGION_WW2G4:
+    {
+        HAL_DBG_TRACE_MSG( "REGION      : WW2G4\n\n\n" );
+        break;
+    }
     default:
         HAL_DBG_TRACE_ERROR( "No supported region selected\n\n\n" );
         break;
@@ -292,8 +318,8 @@ void get_and_print_crashlog( const void* context )
                 HAL_DBG_TRACE_INFO( "###### ===================================== ######\n" );
                 HAL_DBG_TRACE_INFO( "###### =========== MODEM CRASHED =========== ######\n" );
                 HAL_DBG_TRACE_INFO( "###### ===================================== ######\n\n" );
-                HAL_DBG_TRACE_ARRAY( "Crashlog: ", crashlog, 242 );
-                HAL_DBG_TRACE_MSG( "\n\n" );
+                print_ascii_buffer( crashlog, 242 );
+                HAL_DBG_TRACE_MSG( "\n" );
             }
         }
     }

@@ -55,6 +55,7 @@
 #include "apps_utilities.h"
 #include "lr1121_modem_system_types.h"
 #include "lr1121_modem_helper.h"
+#include "common_app_configuration.h"
 
 /*
  * -----------------------------------------------------------------------------
@@ -118,36 +119,9 @@
 #define LORAWAN_CLASS_C 0x02
 
 /**
- * @brief Watchdog counter reload value during sleep (The period must be lower than MCU watchdog period (here 20s))
- */
-#define WATCHDOG_RELOAD_PERIOD_MS 20000
-
-/**
  * @brief Pin of the nucleo button
  */
 #define EXTI_BUTTON PC_13
-
-/*!
- * @brief User application data buffer size
- */
-#define LORAWAN_APP_DATA_MAX_SIZE 242
-
-/*!
- * @brief LoRaWAN regulatory region.
- * One of:
- * LR1121_LORAWAN_REGION_AS923_GRP1
- * LR1121_LORAWAN_REGION_AS923_GRP2
- * LR1121_LORAWAN_REGION_AS923_GRP3
- * LR1121_LORAWAN_REGION_AS923_GRP4
- * LR1121_LORAWAN_REGION_AU915
- * LR1121_LORAWAN_REGION_CN470
- * LR1121_LORAWAN_REGION_EU868
- * LR1121_LORAWAN_REGION_IN865
- * LR1121_LORAWAN_REGION_KR920
- * LR1121_LORAWAN_REGION_RU864
- * LR1121_LORAWAN_REGION_US915
- */
-#define LORAWAN_REGION_USED LR1121_LORAWAN_REGION_EU868
 
 /*!
  * @brief Multicast class
@@ -266,10 +240,11 @@ extern lr1121_t      lr1121;
 static volatile bool user_button_is_press = false;  // Flag for button status
 static volatile bool unicast_ready        = false;  // Flag for class applied
 static volatile bool multicast_started    = false;  // Flag for multicast started
+
+#if( USE_LR11XX_CREDENTIALS )
 /**
  * @brief Internal credentials
  */
-#if defined( USE_LR11XX_CREDENTIALS )
 static uint8_t chip_eui[8] = { 0 };
 static uint8_t chip_pin[4] = { 0 };
 #endif
@@ -345,16 +320,15 @@ int main( void )
     };
     hal_gpio_init_in( lr1121.event.pin, HAL_GPIO_PULL_MODE_NONE, HAL_GPIO_IRQ_MODE_RISING, &event_callback );
 
-    // Flush events before enabling irq
-    lr1121_modem_board_event_flush( &lr1121 );
+    lr1121_modem_system_reboot( &lr1121, false );
 
     // Init done: enable interruption
     hal_mcu_enable_irq( );
+    HAL_DBG_TRACE_MSG( "Initialization done\n\n" );
 
     /* Board is initialized */
     leds_blink( LED_TX_MASK, 100, 20, true );
-    HAL_DBG_TRACE_MSG( "Initialization done\n\n" );
-    lr1121_modem_system_reboot( &lr1121, false );
+
     while( 1 )
     {
         // Check button
@@ -410,9 +384,9 @@ static void event_process( void* context )
             case LR1121_MODEM_LORAWAN_EVENT_RESET:
 
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: RESET\n\n", HAL_DBG_TRACE_COLOR_BLUE );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_system_cfg_lfclk( context, LR1121_MODEM_SYSTEM_LFCLK_XTAL, true ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_crystal_error( context, 50 ) );
+                ASSERT_SMTC_MODEM_RC( lr1121_modem_board_init(context));
                 get_and_print_crashlog( context );
+
                 unicast_ready     = false;
                 multicast_started = false;
 #if( !USE_LR11XX_CREDENTIALS )

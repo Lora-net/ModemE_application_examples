@@ -1,4 +1,4 @@
-# Simple LoRaWAN Class A Application 
+# Simple LoRaWAN Class A Application
 
 This example demonstrates how to periodically send uplinks in a LoRaWAN Class A application and manually trigger uplinks by pressing a button.
 
@@ -10,11 +10,11 @@ Uplinks are sent periodically once the Join-Accept is received.
 
 Pressing the NUCLEO blue button immediately sends an uplink on port 102.
 
-## 2. Configuration 
+## 2. Configuration
 
 ### 2.1. LoRaWAN configuration
 
-Several constants are defined at the top of `main_lorawan.c`, their values can be set to define the LoRaWAN configuration of the application.
+Several constants are defined at the top of `main_lorawan.c`, `common_app_configuration.h`, or `lorawan_commissioning.h`. Their values can be set to define the LoRaWAN configuration of the application.
 
 | Constant              | Comments |
 | --------------------- | -------- |
@@ -36,11 +36,11 @@ Supported values for `LORAWAN_REGION_USED`:
 * `LR1121_LORAWAN_REGION_KR920`
 * `LR1121_LORAWAN_REGION_RU864`
 * `LR1121_LORAWAN_REGION_US915`
-
+* `LR1121_LORAWAN_REGION_WW2G4`
 
 ### 2.2. Join configuration
 
-The LR1121 is pre-provisioned with a ChipEUI/DevEUI and a JoinEUI. The application will use these identifiers if the `USE_LR11XX_CREDENTIALS` from [lorawan_comissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h) is set to true. 
+The LR1121 is pre-provisioned with a ChipEUI/DevEUI and a JoinEUI. The application will use these identifiers if the `USE_LR11XX_CREDENTIALS` from [lorawan_commissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h) is set to true.
 
 Alternatively, you can provide your own EUIs in `Inc/apps/lorawan_commissioning/lorawan_commissioning.h` by setting `USE_LR11XX_CREDENTIALS` to false and by changing the values of `LORAWAN_DEVICE_EUI`, `LORAWAN_JOIN_EUI`, `LORAWAN_NWK_KEY` and `LORAWAN_APP_KEY`.
 

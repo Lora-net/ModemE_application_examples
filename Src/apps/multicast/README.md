@@ -8,11 +8,11 @@ This application automatically submits a Join-Request to the LoRa Network Server
 
 Pressing the NUCLEO blue button starts or stops the multicast session.
 
-## 2. Configuration 
+## 2. Configuration
 
 ### 2.1. LoRaWAN configuration
 
-Several constants are defined at the top of `main_multicast.c`, their values can be set to define the LoRaWAN configuration of the application.
+Several constants are defined at the top of `main_multicast.c`, `common_app_configuration.h`, or `lorawan_commissioning.h`. Their values can be set to define the LoRaWAN configuration of the application.
 
 | Constant              | Comments |
 | --------------------- | -------- |
@@ -33,10 +33,12 @@ Supported values for `LORAWAN_REGION_USED`:
 * `LR1121_LORAWAN_REGION_KR920`
 * `LR1121_LORAWAN_REGION_RU864`
 * `LR1121_LORAWAN_REGION_US915`
+* `LR1121_LORAWAN_REGION_WW2G4`
 
 ### 2.2 Multicast configuration
 
 The application uses predefined multicast keys and parameters, which can be set in the source code.
+
 | Constant              | Comments |
 | --------------------- | -------- |
 | `MULTICAST_KEYS` | Multicast session keys and group addresses. |
@@ -53,7 +55,7 @@ Supported values for `MULTICAST_SESSION_CLASS`:
 
 ### 2.3. Join configuration
 
-The LR1121 is pre-provisioned with a ChipEUI/DevEUI and a JoinEUI. The application will use these identifiers if the `USE_LR11XX_CREDENTIALS` from [lorawan_comissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h) is set to true. 
+The LR1121 is pre-provisioned with a ChipEUI/DevEUI and a JoinEUI. The application will use these identifiers if the `USE_LR11XX_CREDENTIALS` from [lorawan_commissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h) is set to true.
 
 Alternatively, you can provide your own EUIs in `Inc/apps/lorawan_commissioning/lorawan_commissioning.h` by setting `USE_LR11XX_CREDENTIALS` to false and changing the values of `LORAWAN_DEVICE_EUI`, `LORAWAN_JOIN_EUI`, `LORAWAN_NWK_KEY` and `LORAWAN_APP_KEY`.
 
@@ -66,7 +68,6 @@ Then, information about the procedure for activating the class and multicast ses
 
 ### 3.2. Network Server configuration (Chirpstack v4)
 
-
 Here is a description for configuring a Network Server ([Chirpstack v4](https://www.chirpstack.io/docs/index.html)) to send downlinks to multicast sessions.
 
 1. On the main page of the Chirpstack web interface, go to "Applications".
@@ -76,7 +77,6 @@ Here is a description for configuring a Network Server ([Chirpstack v4](https://
 2. Create an application by clicking on "Add application", entering the name of the application, and then clicking on "Submit".
 
 ![Create application](doc/multicast_application.PNG)
-
 
 3. Similarly, create a "device profile" in the corresponding tab. Enter a name for the device profile, configure the region, the MAC version, the regional parameters version, and enable the class you want to use for the multicast session in the Class B or Class C tab.
 
@@ -132,8 +132,6 @@ FPORT= 10               # Fport of the downlink message
 PAYLOAD = "010102020303040404"  # Payload of the downlink message
 ```
 
-
-
 The `MULTICAST_GROUP_ID` can be found under Applications->[name of your application]->Multicast groups->[name of your multicast group]
 
 ![Multicast group ID](doc/multicast-group-id.PNG)
@@ -151,4 +149,3 @@ The application implements a relatively simple state machine based on the recept
 - TxDone event: Logs the transmission status.
 
 Pressing the blue button toggles the multicast session on or off.
-

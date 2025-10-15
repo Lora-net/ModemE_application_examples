@@ -1,4 +1,4 @@
-# LoRaWAN Class B Application 
+# LoRaWAN Class B Application
 
 This example demonstrates how to switch between Class A and Class B modes in a LoRaWAN application, allowing the device to communicate using scheduled ping slots in Class B mode.
 
@@ -12,11 +12,11 @@ Pressing the NUCLEO blue button switches the device between Class A and Class B.
 
 Once Class B is set, the modem will automatically send a DevTimeRequest and a PingSlotInfoRequest to the Network Server, then enable Class B after receiving a beacon.
 
-## 2. Configuration 
+## 2. Configuration
 
 ### 2.1. LoRaWAN configuration
 
-Several constants are defined at the top of `main_lorawan.c`, their values can be set to define the LoRaWAN configuration of the application.
+Several constants are defined at the top of `main_lorawan.c`, `common_app_configuration.h`, or `lorawan_commissioning.h`. Their values can be set to define the LoRaWAN configuration of the application.
 
 | Constant              | Comments |
 | --------------------- | -------- |
@@ -38,6 +38,7 @@ Supported values for `LORAWAN_REGION_USED`:
 * `LR1121_LORAWAN_REGION_KR920`
 * `LR1121_LORAWAN_REGION_RU864`
 * `LR1121_LORAWAN_REGION_US915`
+* `LR1121_LORAWAN_REGION_WW2G4`
 
 Supported values for `PING_SLOT_PERIODICITY`:
 
@@ -52,7 +53,7 @@ Supported values for `PING_SLOT_PERIODICITY`:
 
 ### 2.2. Join configuration
 
-The LR1121 is pre-provisioned with a ChipEUI/DevEUI and a JoinEUI. The application will use these identifiers if the `USE_LR11XX_CREDENTIALS` from [lorawan_comissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h) is set to true. 
+The LR1121 is pre-provisioned with a ChipEUI/DevEUI and a JoinEUI. The application will use these identifiers if the `USE_LR11XX_CREDENTIALS` from [lorawan_commissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h) is set to true.
 
 Alternatively, you can provide your own EUIs in `Inc/apps/lorawan_commissioning/lorawan_commissioning.h` by setting `USE_LR11XX_CREDENTIALS` to false and changing the values of `LORAWAN_DEVICE_EUI`, `LORAWAN_JOIN_EUI`, `LORAWAN_NWK_KEY` and `LORAWAN_APP_KEY`.
 
@@ -75,4 +76,4 @@ The application implements a state machine based on the reception of events:
 - Class B status event: Immediately sends an uplink to inform the Network Server that Class B is running.
 - TxDone event: Checks if Class B is enabled; if yes, displays a message to inform you that you can send Class B downlinks.
 
-Pressing the blue button switches the device between Class A and Class B.  
+Pressing the blue button switches the device between Class A and Class B.

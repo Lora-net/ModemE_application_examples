@@ -44,6 +44,8 @@ extern "C" {
  * --- DEPENDENCIES ------------------------------------------------------------
  */
 
+#include "lr1121_modem_system_types.h"
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC MACROS -----------------------------------------------------------
@@ -54,10 +56,44 @@ extern "C" {
  * --- PUBLIC CONSTANTS --------------------------------------------------------
  */
 
+/*
+ * -----------------------------------------------------------------------------
+ * --- TCXO CONFIGURATION ------------------------------------------------------
+ */
+
+/**
+ * @brief Indicates whether the board includes a TCXO (Temperature Compensated Crystal Oscillator).
+ * 
+ * Define this macro to 1 if the board has a TCXO connected and requires IO initialization.
+ * Defaults to 0 (no TCXO) if not defined elsewhere.
+ */
+#ifndef TCXO_ON_BOARD
+#define TCXO_ON_BOARD 0
+#endif
+
+/**
+ * @brief Defines the supply voltage for the TCXO.
+ * 
+ * Available values:
+ * - LR1121_MODEM_SYSTEM_TCXO_CTRL_1_6V (0x00) - Supply voltage = 1.6V
+ * - LR1121_MODEM_SYSTEM_TCXO_CTRL_1_7V (0x01) - Supply voltage = 1.7V
+ * - LR1121_MODEM_SYSTEM_TCXO_CTRL_1_8V (0x02) - Supply voltage = 1.8V
+ * - LR1121_MODEM_SYSTEM_TCXO_CTRL_2_2V (0x03) - Supply voltage = 2.2V
+ * - LR1121_MODEM_SYSTEM_TCXO_CTRL_2_4V (0x04) - Supply voltage = 2.4V
+ * - LR1121_MODEM_SYSTEM_TCXO_CTRL_2_7V (0x05) - Supply voltage = 2.7V
+ * - LR1121_MODEM_SYSTEM_TCXO_CTRL_3_0V (0x06) - Supply voltage = 3.0V
+ * - LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V (0x07) - Supply voltage = 3.3V
+ */
+#ifndef BOARD_TCXO_SUPPLY_VOLTAGE
+#define BOARD_TCXO_SUPPLY_VOLTAGE LR1121_MODEM_SYSTEM_TCXO_CTRL_1_8V
+#endif
+
 /**
  * @brief Defines the time required for the TCXO to wakeup [ms].
  */
-#define BOARD_TCXO_WAKEUP_TIME 5
+#ifndef BOARD_TCXO_WAKEUP_TIME
+#define BOARD_TCXO_WAKEUP_TIME 8
+#endif
 
 /**
  * @brief Board MCU pins definitions

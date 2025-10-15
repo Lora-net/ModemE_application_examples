@@ -45,6 +45,7 @@
 #include "lr1121_modem_modem_types.h"
 #include "leds.h"
 #include "smtc_hal_tmr_list.h"
+#include <common_app_configuration.h>
 
 /*
  * -----------------------------------------------------------------------------
@@ -55,8 +56,6 @@
  * -----------------------------------------------------------------------------
  * --- PRIVATE CONSTANTS -------------------------------------------------------
  */
-
-#define GNSS_WEEK_NUMBER_ROLLOVER_2019_2038 2
 
 /*
  * -----------------------------------------------------------------------------
@@ -101,6 +100,14 @@ static lr1121_modem_board_led_ctx_t lr1121_modem_board_leds[LR1121_EVK_LED_COUNT
  */
 static void on_led_timer_event( void* context );
 
+#if defined(TCXO_ON_BOARD) && (TCXO_ON_BOARD != 0)
+/*!
+ * @brief Init TCXO
+ *
+ * @param context Context used to retrieve the index of the relevant LED.
+ */
+static lr1121_modem_response_code_t lr1121_modem_board_init_tcxo_io( const void* context );
+#endif
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC VARIABLES --------------------------------------------------------
@@ -152,24 +159,36 @@ void lr1121_modem_board_analog_deinit_io( const void* context )
 
 uint32_t lr1121_modem_board_get_tcxo_wakeup_time( void ) { return BOARD_TCXO_WAKEUP_TIME; }
 
-lr1121_modem_response_code_t lr1121_modem_board_init( const void* context )
+lr1121_modem_response_code_t lr1121_modem_board_init(const void* context)
 {
-    lr1121_modem_response_code_t    modem_response_code = LR1121_MODEM_RESPONSE_CODE_OK;
-    lr1121_modem_hal_status_t       modem_hal_status    = LR1121_MODEM_HAL_STATUS_OK;
-    lr1121_modem_system_lfclk_cfg_t lfclk_cfg           = LR1121_MODEM_SYSTEM_LFCLK_XTAL;
+    lr1121_modem_response_code_t modem_response_code = LR1121_MODEM_RESPONSE_CODE_OK;
 
-    modem_hal_status = lr1121_modem_hal_reset( context );
-    if( modem_hal_status != LR1121_MODEM_HAL_STATUS_OK )
-    {
-        /* Something goes wrong with the lr1121 modem-e */
-        return LR1121_MODEM_RESPONSE_CODE_FAIL;
-    }
-    modem_response_code |= lr1121_modem_system_cfg_lfclk( context, lfclk_cfg, true );
-    modem_response_code |= lr1121_modem_set_crystal_error( context, 10 );
+    // Initialize TCXO control if required by board design
+    #if defined(TCXO_ON_BOARD) && (TCXO_ON_BOARD != 0)
+        lr1121_modem_board_init_tcxo_io(context);
+    #endif
+    
+
+    // Configure the low-frequency clock source (XTAL)
+    modem_response_code |= lr1121_modem_system_cfg_lfclk(context, LR1121_MODEM_SYSTEM_LFCLK_XTAL, true);
+
+    // Set the crystal oscillator error (in ppm)
+    modem_response_code |= lr1121_modem_set_crystal_error(context, 50);
+
+    /*
+     * --------------------------------------------------------------
+     * Optional: Add BSP-specific configuration here if needed.
+     * For example, setting a TX power offset:
+     *
+     * uint8_t power_offset = 5;
+     * modem_response_code |= lr1121_modem_set_tx_power_offset(context, power_offset);
+     *
+     * You can add any other board-specific settings in this section.
+     * --------------------------------------------------------------
+     */
 
     return modem_response_code;
 }
-
 void lr1121_modem_board_lna_on( void ) { lna_on( ); }
 
 void lr1121_modem_board_lna_off( void ) { lna_off( ); }
@@ -331,11 +350,13 @@ void lr1121_modem_board_led_pulse( uint32_t led_mask, bool turn_on, uint32_t dur
  * --- PRIVATE FUNCTIONS DEFINITION --------------------------------------------
  */
 
-// static lr1121_modem_response_code_t lr1121_modem_board_init_tcxo_io( const void* context )
-// {
-//     return lr1121_modem_system_set_tcxo_mode( context, LR1121_MODEM_SYSTEM_TCXO_CTRL_1_8V,
-//                                               ( lr1121_modem_board_get_tcxo_wakeup_time( ) * 1000 ) / 30.52 );
-// }
+#if defined(TCXO_ON_BOARD) && (TCXO_ON_BOARD != 0)
+static lr1121_modem_response_code_t lr1121_modem_board_init_tcxo_io( const void* context )
+{
+    return lr1121_modem_system_set_tcxo_mode( context, BOARD_TCXO_SUPPLY_VOLTAGE,
+                                              ( lr1121_modem_board_get_tcxo_wakeup_time( ) * 32768 ) / 1000 );
+}
+#endif
 
 void on_led_timer_event( void* context )
 {

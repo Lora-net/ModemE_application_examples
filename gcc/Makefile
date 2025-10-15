@@ -211,6 +211,10 @@ endif
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
+# Add extra flags from command line to configure constants
+EXTRAFLAGS ?=
+CFLAGS += $(EXTRAFLAGS)
+
 #######################################
 # LDFLAGS
 #######################################
