@@ -1,10 +1,10 @@
-/**
- * @file      common_app_configuration.h
+/*!
+ * @file      modem_e_types.h
  *
- * @brief     App configuration common to all apps
+ * @brief     Type definitions
  *
  * The Clear BSD License
- * Copyright Semtech Corporation 2024. All rights reserved.
+ * Copyright Semtech Corporation 2026. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted (subject to the limitations in the disclaimer
@@ -32,12 +32,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COMMON_APP_CONFIGURATION_H
-#define COMMON_APP_CONFIGURATION_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef MODEM_E_TYPES_H
+#define MODEM_E_TYPES_H
 
 /*
  * -----------------------------------------------------------------------------
@@ -49,49 +45,6 @@ extern "C" {
  * --- PUBLIC MACROS -----------------------------------------------------------
  */
 
-/**
- * @brief Watchdog counter reload value during sleep (The period must be lower than MCU watchdog period (here 20s))
- */
-#ifndef WATCHDOG_RELOAD_PERIOD_MS
-#define WATCHDOG_RELOAD_PERIOD_MS 20000
-#endif  // WATCHDOG_RELOAD_PERIOD_MS
-
-/*!
- * @brief User application data buffer size
- */
-#ifndef LORAWAN_APP_DATA_MAX_SIZE
-#define LORAWAN_APP_DATA_MAX_SIZE 242
-#endif  // LORAWAN_APP_DATA_MAX_SIZE
-
-/*!
- * @brief LoRaWAN regulatory region.
- * One of:
- * MODEM_E_LORAWAN_REGION_AS923_GRP1
- * MODEM_E_LORAWAN_REGION_AS923_GRP2
- * MODEM_E_LORAWAN_REGION_AS923_GRP3
- * MODEM_E_LORAWAN_REGION_AS923_GRP4
- * MODEM_E_LORAWAN_REGION_AU915
- * MODEM_E_LORAWAN_REGION_CN470
- * MODEM_E_LORAWAN_REGION_EU868
- * MODEM_E_LORAWAN_REGION_IN865
- * MODEM_E_LORAWAN_REGION_KR920
- * MODEM_E_LORAWAN_REGION_RU864
- * MODEM_E_LORAWAN_REGION_US915
- */
-#ifndef LORAWAN_REGION_USED
-#define LORAWAN_REGION_USED MODEM_E_LORAWAN_REGION_AU915
-#endif  // LORAWAN_REGION_USED
-
-/**
- * @brief Periodical uplink alarm delay in seconds
- */
-#ifndef PERIODICAL_UPLINK_DELAY_S
-#define PERIODICAL_UPLINK_DELAY_S 30
-#endif  // PERIODICAL_UPLINK_DELAY_S
-
-
-
-
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC CONSTANTS --------------------------------------------------------
@@ -102,15 +55,20 @@ extern "C" {
  * --- PUBLIC TYPES ------------------------------------------------------------
  */
 
+/**
+ * @brief Modem-E status
+ */
+typedef enum modem_e_status_e
+{
+    MODEM_E_STATUS_OK    = 0,  //!< Operation terminated successfully
+    MODEM_E_STATUS_ERROR = 3,  //!< Operation terminated with error
+} modem_e_status_t;
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC FUNCTIONS PROTOTYPES ---------------------------------------------
  */
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif  // COMMON_APP_CONFIGURATION_H
+#endif  // MODEM_E_TYPES_H
 
 /* --- EOF ------------------------------------------------------------------ */

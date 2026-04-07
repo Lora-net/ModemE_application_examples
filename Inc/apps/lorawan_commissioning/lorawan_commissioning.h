@@ -116,6 +116,36 @@ extern "C" {
 #endif  // LORAWAN_APP_KEY
 #define LORAWAN_APP_KEY_LEN 16
 
+/**
+ * @brief ABP Device Address
+ */
+#ifndef LORAWAN_ABP_DEV_ADDR
+#define LORAWAN_ABP_DEV_ADDR                                                   \
+    {                                                                          \
+        0x01, 0x02, 0x03, 0x04                        \
+    }
+#endif  // LORAWAN_ABP_DEV_ADDR
+
+/**
+ * @brief ABP Network Session Key (big endian)
+ */
+#ifndef LORAWAN_ABP_NWK_SKEY
+#define LORAWAN_ABP_NWK_SKEY                                                                           \
+    {                                                                                                  \
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10 \
+    }
+#endif  // LORAWAN_ABP_NWK_SKEY
+
+/**
+ * @brief ABP Application Session Key (big endian)
+ */
+#ifndef LORAWAN_ABP_APP_SKEY
+#define LORAWAN_ABP_APP_SKEY                                                                           \
+    {                                                                                                  \
+        0x10, 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10 \
+    }
+#endif  // LORAWAN_ABP_APP_SKEY
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC TYPES ------------------------------------------------------------

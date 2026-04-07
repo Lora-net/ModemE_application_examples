@@ -1,12 +1,10 @@
-/**
- * @file      apps_utilities.h
+/*!
+ * @file      modem_e_lr_fhss.h
  *
- * @brief     Common Application Helper functions
+ * @brief     LR_FHSS driver definition
  *
- * @copyright
- * @parblock
  * The Clear BSD License
- * Copyright Semtech Corporation 2024. All rights reserved.
+ * Copyright Semtech Corporation 2026. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted (subject to the limitations in the disclaimer
@@ -32,10 +30,10 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * @endparblock
  */
-#ifndef APPS_UTILITIES_H
-#define APPS_UTILITIES_H
+
+#ifndef MODEM_E_LR_FHSS_H
+#define MODEM_E_LR_FHSS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,9 +44,9 @@ extern "C" {
  * --- DEPENDENCIES ------------------------------------------------------------
  */
 
-#include "modem_e_lorawan.h"
-#include "modem_e_modem.h"
 #include <stdint.h>
+#include "modem_e_lr_fhss_types.h"
+#include "modem_e_common.h"
 
 /*
  * -----------------------------------------------------------------------------
@@ -60,6 +58,11 @@ extern "C" {
  * --- PUBLIC CONSTANTS --------------------------------------------------------
  */
 
+/**
+ * @brief Length, in bytes, of a LR-FHSS sync word
+ */
+#define LR_FHSS_SYNC_WORD_BYTES ( 4 )
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC TYPES ------------------------------------------------------------
@@ -70,78 +73,69 @@ extern "C" {
  * --- PUBLIC FUNCTIONS PROTOTYPES ---------------------------------------------
  */
 
-/**
- * @brief Prints the provided buffer in HEX
- *
- * @param [in] buffer Buffer to be printed
- * @param [in] size Buffer size to be printed
- */
-void print_hex_buffer( const uint8_t* buffer, uint8_t size );
-
-/**
- * @brief Prints the provided buffer as ASCII characters
- *
- * @param [in] buffer Buffer to be printed
- * @param [in] size Buffer size to be printed
- */
-void print_ascii_buffer( const uint8_t* buffer, uint16_t size );
-
-/**
- * @brief Prints the LoRaWAN keys
- *
- * @param [in] dev_eui Device EUI to be printed
- * @param [in] join_eui Join EUI to be printed
- * @param [in] use_internal_credentials specify if the internal credentials are used
- */
-void print_lorawan_credentials( const uint8_t* dev_eui, const uint8_t* join_eui, const uint8_t* pin,
-                                const bool use_internal_credentials );
-
-/**
- * @brief Prints the LoRaWAN version
- *
- * @param [in] modem_version Modem version to be printed
- */
-void print_version( modem_e_version_t modem_version );
-
-/**
- * @brief convert lr1121 modem-e status to string
- */
-void modem_status_to_string( modem_e_lorawan_status_t modem_status );
-
-/**
- * @brief Get the lorawan region from modem and print it
+/*!
+ * @brief Initialize the LR_FHSS
  *
  * @param [in] context Chip implementation context
- * @param [out] modem_region The LoRaWAN region returned by the modem. This pointer can be NULL: in this case the region
- * is only printed, and not returned to caller
- */
-void get_and_print_lorawan_region_from_modem( const void* context, modem_e_regions_t* modem_region );
-
-/**
- * @brief Prints the LoRaWAN region
  *
- * @param [in] region Region to be printed
+ * @returns Operation status
  */
-void print_lorawan_region( modem_e_regions_t region );
+modem_e_response_code_t modem_e_lr_fhss_init( const void* context );
 
 /**
- * @brief Prints the state of certification mode
+ * @brief Get the delay in microsecond between the last bit sent and the TX done interrupt
  *
- * @param [in] certif_running State of certification mode
+ * @param [in]  params          Modem-E LR-FHSS parameter structure
+ * @param [in]  payload_length  Length of application-layer payload
+ *
+ * @returns Delay in microseconds
  */
-void print_certification( modem_e_certification_mode_t certif_running );
+uint16_t modem_e_lr_fhss_get_bit_delay_in_us( const modem_e_lr_fhss_params_t* params, uint16_t payload_length );
 
-/**
- * @brief Gets and prints the crashlog if the crashlog status bit is set
+/*!
+ * @brief Configure a payload to be sent with LR_FHSS
+ *
+ * When calling this method, modem_e_radio_set_lr_fhss_sync_word is implicitely called to configure the sync word.
+ * Note that the syncword must be 4 bytes long.
  *
  * @param [in] context Chip implementation context
+ * @param [in] lr_fhss_params Parameter configuration structure of the LRFHSS
+ * @param [in] hop_sequence_id Seed used to derive the hopping sequence pattern. Only the nine LSBs are taken into
+ * account
+ * @param [in] payload The payload to send. It is the responsibility of the caller to ensure that this references an
+ * array containing at least payload_length elements
+ * @param [in] payload_length The length of the payload
+ *
+ * @returns Operation status
  */
-void get_and_print_crashlog( const void* context );
+modem_e_response_code_t modem_e_lr_fhss_build_frame( const void*                     context,
+                                                     const modem_e_lr_fhss_params_t* lr_fhss_params,
+                                                     uint16_t hop_sequence_id, const uint8_t* payload,
+                                                     uint8_t payload_length );
+
+/*!
+ * @brief Get the time on air in ms for LR-FHSS transmission
+ *
+ * @param [in]  params         Modem-E LR-FHSS parameter structure
+ * @param [in]  payload_length Length of application-layer payload
+ *
+ * @returns Time-on-air value in ms for LR-FHSS transmission
+ */
+uint32_t modem_e_lr_fhss_get_time_on_air_in_ms( const modem_e_lr_fhss_params_t* params, uint16_t payload_length );
+
+/**
+ * @brief Return the number of hop sequences available using the given parameters
+ *
+ * @param [in] lr_fhss_params Parameter configuration structure of the LRFHSS
+ *
+ * @return Returns the number of valid hop sequences (512 or 384)
+ */
+unsigned int modem_e_lr_fhss_get_hop_sequence_count( const modem_e_lr_fhss_params_t* lr_fhss_params );
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // APPS_UTILITIES_H
+#endif  // MODEM_E_LR_FHSS_H
 
 /* --- EOF ------------------------------------------------------------------ */

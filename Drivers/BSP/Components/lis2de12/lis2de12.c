@@ -34,7 +34,7 @@
  *
  */
 #include "lis2de12.h"
-#include "lr1121_modem_board.h"
+#include "modem_e_board.h"
 
 /***************************************************************************\
  * RAM data

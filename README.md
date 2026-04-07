@@ -3,7 +3,7 @@
 ## 1. Description
 
 The LR1121 modem application example project contains several simple examples highlighting LoRa Basic Modem-E features.  
-This version of the examples supports LoRa Basics™ Modem-E **v2.0.2**.
+This version of the examples supports LoRa Basics™ Modem-E **v2.1.0**.
 
 
 ### 1.1. Simple LoRaWAN Class A application
@@ -12,11 +12,17 @@ This application automatically joins the LoRa Network server and then sends upli
 
 Please read the [lorawan application documentation](Src/apps/LoRaWAN/README.md) for more details.
 
-### 1.2. Certification application
+### 1.2. Certification OTAA application
 
-This application switches the modem to certification mode once the NUCLEO blue button is pressed.
+This application switches the modem to certification mode once the NUCLEO blue button is pressed. It uses OTAA (Over-The-Air Activation) for joining the network.
 
-Please read the [certification application documentation](Src/apps/certification/README.md) for more details.
+Please read the [certification OTAA application documentation](Src/apps/certification-otaa/README.md) for more details.
+
+### 1.2b. Certification ABP application
+
+This application is similar to the OTAA certification example but uses ABP (Activation By Personalization) for network connection. On a reset request from LCTT, it saves the modem state to NVM before resetting and restores it afterwards.
+
+Please read the [certification ABP application documentation](Src/apps/certification-abp/README.md) for more details.
 
 ### 1.3. LoRaWAN Class B application
 
@@ -54,21 +60,21 @@ To enable support for TCXO-based shields, you must modify the TCXO configuration
 
 **Advanced TCXO Parameters (configurable when `TCXO_ON_BOARD = 1`):**
 - `BOARD_TCXO_SUPPLY_VOLTAGE`: Configure the TCXO supply voltage. Available options:
-  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_1_6V` (1.6V)
-  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_1_7V` (1.7V)
-  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_1_8V` (1.8V) - **Default**
-  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_2_2V` (2.2V)
-  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_2_4V` (2.4V)
-  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_2_7V` (2.7V)
-  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_3_0V` (3.0V)
-  - `LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V` (3.3V)
+  - `MODEM_E_SYSTEM_TCXO_CTRL_1_6V` (1.6V)
+  - `MODEM_E_SYSTEM_TCXO_CTRL_1_7V` (1.7V)
+  - `MODEM_E_SYSTEM_TCXO_CTRL_1_8V` (1.8V) - **Default**
+  - `MODEM_E_SYSTEM_TCXO_CTRL_2_2V` (2.2V)
+  - `MODEM_E_SYSTEM_TCXO_CTRL_2_4V` (2.4V)
+  - `MODEM_E_SYSTEM_TCXO_CTRL_2_7V` (2.7V)
+  - `MODEM_E_SYSTEM_TCXO_CTRL_3_0V` (3.0V)
+  - `MODEM_E_SYSTEM_TCXO_CTRL_3_3V` (3.3V)
 
 - `BOARD_TCXO_WAKEUP_TIME`: Configure the TCXO wakeup time in milliseconds (default: 8ms)
 
 **Example configuration for a 3.3V TCXO with 10ms wakeup time:**
 ```c
 #define TCXO_ON_BOARD 1
-#define BOARD_TCXO_SUPPLY_VOLTAGE LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V
+#define BOARD_TCXO_SUPPLY_VOLTAGE MODEM_E_SYSTEM_TCXO_CTRL_3_3V
 #define BOARD_TCXO_WAKEUP_TIME 10
 ```
 
@@ -108,12 +114,12 @@ $ make APP=lorawan EXTRAFLAGS='-D<TOKEN>=<VALUE>'
 Where `<TOKEN>` is a macro name to configure with `<VALUE>`, for instance:
 
 ```bash
-$ make APP=lorawan EXTRAFLAGS='-DLORAWAN_REGION_USED=LR1121_LORAWAN_REGION_EU868'
+$ make APP=lorawan EXTRAFLAGS='-DLORAWAN_REGION_USED=MODEM_E_LORAWAN_REGION_EU868'
 ```
 
 **Example: Building with TCXO configuration:**
 ```bash
-$ make APP=lorawan EXTRAFLAGS='-DTCXO_ON_BOARD=1 -DBOARD_TCXO_SUPPLY_VOLTAGE=LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V -DBOARD_TCXO_WAKEUP_TIME=10'
+$ make APP=lorawan EXTRAFLAGS='-DTCXO_ON_BOARD=1 -DBOARD_TCXO_SUPPLY_VOLTAGE=MODEM_E_SYSTEM_TCXO_CTRL_3_3V -DBOARD_TCXO_WAKEUP_TIME=10'
 ```
 
 Here is the list of configurable tokens:
@@ -133,10 +139,10 @@ Here is the list of configurable tokens:
 
 **TCXO Configuration:**
 * `TCXO_ON_BOARD` (set to 1 to enable TCXO support)
-* `BOARD_TCXO_SUPPLY_VOLTAGE` (e.g., `LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V`)
+* `BOARD_TCXO_SUPPLY_VOLTAGE` (e.g., `MODEM_E_SYSTEM_TCXO_CTRL_3_3V`)
 * `BOARD_TCXO_WAKEUP_TIME` (wakeup time in milliseconds)
 
-Note: The supported application names are `lorawan`, `certification`, `class_b`, `multicast` and `fuota`.
+Note: The supported application names are `lorawan`, `certification-otaa`, `certification-abp`, `class_b`, `multicast` and `fuota`.
 
 2. The application binary file, for example `lorawan.bin`, is created in the `gcc/build` directory.
 3. Copy the binary file to the STM32 microcontroller, either using the host OS copy facility or a dedicated tool like the STM32 ST-Link utility.

@@ -18,7 +18,8 @@
 # Default application to build
 # Supported values:
 #  lorawan
-#  certification
+#  certification-otaa
+#  certification-abp
 #  fuota
 #  multicast
 #  class_b
@@ -62,15 +63,20 @@ ${TOP_DIR}/Src/smtc_hal/smtc_hal_tmr_list.c \
 ${TOP_DIR}/Src/smtc_hal/smtc_hal_uart.c \
 ${TOP_DIR}/Src/smtc_hal/smtc_hal_watchdog.c \
 ${TOP_DIR}/Src/smtc_hal/smtc_utilities.c \
-${TOP_DIR}/Src/boards/lr1121_modem_board.c \
-${TOP_DIR}/Src/radio/lr1121_modem_hal.c \
-${TOP_DIR}/Src/radio/lr1121_modem/src/lr1121_bootloader.c \
-${TOP_DIR}/Src/radio/lr1121_modem/src/lr1121_modem_driver_version.c \
-${TOP_DIR}/Src/radio/lr1121_modem/src/lr1121_modem_lorawan.c \
-${TOP_DIR}/Src/radio/lr1121_modem/src/lr1121_modem_modem.c \
-${TOP_DIR}/Src/radio/lr1121_modem/src/lr1121_modem_bsp.c \
-${TOP_DIR}/Src/radio/lr1121_modem/src/lr1121_modem_system.c \
-${TOP_DIR}/Src/radio/lr1121_modem/src/lr1121_modem_helper.c \
+${TOP_DIR}/Src/boards/modem_e_board.c \
+${TOP_DIR}/Src/radio/modem_e_hal_impl.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_bootloader.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_driver_version.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_lorawan.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_modem.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_bsp.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_system.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_helper.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_radio.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_radio_timings.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_regmem.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_relay.c \
+${TOP_DIR}/Src/radio/modem_e/src/modem_e_lr_fhss.c \
 ${TOP_DIR}/Drivers/BSP/Components/external_supply/external_supply.c \
 ${TOP_DIR}/Drivers/BSP/Components/Leds/leds.c \
 ${TOP_DIR}/Drivers/BSP/Components/lis2de12/lis2de12.c \
@@ -107,9 +113,14 @@ C_SOURCES +=  \
 ${TOP_DIR}/Src/apps/LoRaWAN/main_lorawan.c
 endif
 
-ifeq ($(APP),certification)
+ifeq ($(APP),certification-otaa)
 C_SOURCES +=  \
-${TOP_DIR}/Src/apps/certification/main_certification.c
+${TOP_DIR}/Src/apps/certification-otaa/main_certification_otaa.c
+endif
+
+ifeq ($(APP),certification-abp)
+C_SOURCES +=  \
+${TOP_DIR}/Src/apps/certification-abp/main_certification_abp.c
 endif
 
 ifeq ($(APP),fuota)
@@ -196,7 +207,7 @@ C_INCLUDES =  \
 -I${TOP_DIR}/Inc/apps/lorawan_commissioning \
 -I${TOP_DIR}/Inc/boards \
 -I${TOP_DIR}/Src/radio \
--I${TOP_DIR}/Src/radio/lr1121_modem/src \
+-I${TOP_DIR}/Src/radio/modem_e/src \
 -I${TOP_DIR}/Src/apps/LoRaWan \
 
 # compile gcc flags

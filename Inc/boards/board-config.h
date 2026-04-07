@@ -44,7 +44,7 @@ extern "C" {
  * --- DEPENDENCIES ------------------------------------------------------------
  */
 
-#include "lr1121_modem_system_types.h"
+#include "modem_e_system_types.h"
 
 /*
  * -----------------------------------------------------------------------------
@@ -75,17 +75,17 @@ extern "C" {
  * @brief Defines the supply voltage for the TCXO.
  * 
  * Available values:
- * - LR1121_MODEM_SYSTEM_TCXO_CTRL_1_6V (0x00) - Supply voltage = 1.6V
- * - LR1121_MODEM_SYSTEM_TCXO_CTRL_1_7V (0x01) - Supply voltage = 1.7V
- * - LR1121_MODEM_SYSTEM_TCXO_CTRL_1_8V (0x02) - Supply voltage = 1.8V
- * - LR1121_MODEM_SYSTEM_TCXO_CTRL_2_2V (0x03) - Supply voltage = 2.2V
- * - LR1121_MODEM_SYSTEM_TCXO_CTRL_2_4V (0x04) - Supply voltage = 2.4V
- * - LR1121_MODEM_SYSTEM_TCXO_CTRL_2_7V (0x05) - Supply voltage = 2.7V
- * - LR1121_MODEM_SYSTEM_TCXO_CTRL_3_0V (0x06) - Supply voltage = 3.0V
- * - LR1121_MODEM_SYSTEM_TCXO_CTRL_3_3V (0x07) - Supply voltage = 3.3V
+ * - MODEM_E_SYSTEM_TCXO_CTRL_1_6V (0x00) - Supply voltage = 1.6V
+ * - MODEM_E_SYSTEM_TCXO_CTRL_1_7V (0x01) - Supply voltage = 1.7V
+ * - MODEM_E_SYSTEM_TCXO_CTRL_1_8V (0x02) - Supply voltage = 1.8V
+ * - MODEM_E_SYSTEM_TCXO_CTRL_2_2V (0x03) - Supply voltage = 2.2V
+ * - MODEM_E_SYSTEM_TCXO_CTRL_2_4V (0x04) - Supply voltage = 2.4V
+ * - MODEM_E_SYSTEM_TCXO_CTRL_2_7V (0x05) - Supply voltage = 2.7V
+ * - MODEM_E_SYSTEM_TCXO_CTRL_3_0V (0x06) - Supply voltage = 3.0V
+ * - MODEM_E_SYSTEM_TCXO_CTRL_3_3V (0x07) - Supply voltage = 3.3V
  */
 #ifndef BOARD_TCXO_SUPPLY_VOLTAGE
-#define BOARD_TCXO_SUPPLY_VOLTAGE LR1121_MODEM_SYSTEM_TCXO_CTRL_1_8V
+#define BOARD_TCXO_SUPPLY_VOLTAGE MODEM_E_SYSTEM_TCXO_CTRL_1_8V
 #endif
 
 /**

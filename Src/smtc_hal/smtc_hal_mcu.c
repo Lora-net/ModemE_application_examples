@@ -39,7 +39,7 @@
 
 #include "stm32l4xx_hal.h"
 #include "stm32l4xx_ll_utils.h"
-#include "lr1121_modem_board.h"
+#include "modem_e_board.h"
 #include "smtc_hal.h"
 
 #if( HAL_DBG_TRACE == HAL_FEATURE_ON )
@@ -71,7 +71,7 @@
 /*!
  * @brief Radio hardware and global parameters
  */
-lr1121_t lr1121;
+modem_e_t modem_e;
 
 /*!
  * @brief Low Power options
@@ -235,9 +235,9 @@ void hal_mcu_init( void )
 
     /* Initialize SPI */
     hal_spi_init( HAL_RADIO_SPI_ID, RADIO_MOSI, RADIO_MISO, RADIO_SCLK );
-    lr1121_modem_board_init_io_context( &lr1121 );
+    modem_e_board_init_io_context( &modem_e );
     /* Init lr1121 IO */
-    lr1121_modem_board_init_io( &lr1121 );
+    modem_e_board_init_io( &modem_e );
 
     /* Initialize RTC */
     hal_rtc_init( );
@@ -597,7 +597,7 @@ void hal_mcu_low_power_handler( void )
 static void hal_mcu_deinit( void )
 {
     hal_spi_deinit( HAL_RADIO_SPI_ID );
-    lr1121_modem_board_deinit_io( &lr1121 );
+    modem_e_board_deinit_io( &modem_e );
     /* Disable I2C */
     hal_i2c_deinit( HAL_I2C_ID );
     /* Disable UART */
@@ -622,7 +622,7 @@ static void hal_mcu_reinit( void )
     /* Initialize SPI */
     hal_spi_init( HAL_RADIO_SPI_ID, RADIO_MOSI, RADIO_MISO, RADIO_SCLK );
     /* Init lr1121 IO */
-    lr1121_modem_board_init_io( &lr1121 );
+    modem_e_board_init_io( &modem_e );
 }
 
 static void hal_mcu_system_clock_re_config_after_stop( void )

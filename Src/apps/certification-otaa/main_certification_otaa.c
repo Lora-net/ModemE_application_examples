@@ -1,8 +1,8 @@
-/*!
- * @ingroup   apps_multicast
- * @file      main_multicast.c
+/**
+ * @ingroup   apps_certification
+ * @file      main_certification.c
  *
- * @brief     modem_e Modem-E multicast implementation
+ * @brief     modem_e Modem-E certification implementation
  *
  * @copyright
  * @parblock
@@ -36,9 +36,9 @@
  * @endparblock
  */
 
-/*!
- * @addtogroup apps_multicast
- * modem_e Modem-E multicast device implementation
+/**
+ * @addtogroup apps_certification
+ * modem_e Modem-E certification device implementation
  * @{
  */
 
@@ -62,13 +62,13 @@
  * --- PRIVATE MACROS-----------------------------------------------------------
  */
 
-/*!
+/**
  * @brief Stringify constants
  */
 #define xstr( a ) str( a )
 #define str( a ) #a
 
-/*!
+/**
  * @brief Helper macro that returned a human-friendly message if a command does not return MODEM_E_RESPONSE_CODE_OK
  *
  * @remark The macro is implemented to be used with functions returning a @ref modem_e_response_code_t
@@ -112,120 +112,22 @@
         }                                                                                      \
     } while( 0 )
 
-/*!
- * @brief Multicast session class definition
- */
-#define LORAWAN_CLASS_B 0x01
-#define LORAWAN_CLASS_C 0x02
-
-/**
- * @brief Pin of the nucleo button
- */
 #define EXTI_BUTTON PC_13
-
-/*!
- * @brief Multicast class
- * One of:
- * LORAWAN_CLASS_B
- * LORAWAN_CLASS_C
- */
-#define MULTICAST_SESSION_CLASS LORAWAN_CLASS_C
-
-/*!
- * @brief Number of multicast session (1 or 2).
- */
-#define NUMBER_MULTICAST_SESSION 2
 
 /*
  * -----------------------------------------------------------------------------
  * --- PRIVATE CONSTANTS -------------------------------------------------------
  */
 
+#if( !USE_LR11XX_CREDENTIALS )
 /**
  * @brief Stack credentials
  */
-#if( USE_LR11XX_CREDENTIALS == 0 )
-static const uint8_t user_dev_eui[8]  = LORAWAN_DEVICE_EUI;
 static const uint8_t user_join_eui[8] = LORAWAN_JOIN_EUI;
+static const uint8_t user_dev_eui[8]  = LORAWAN_DEVICE_EUI;
 static const uint8_t user_nwk_key[16] = LORAWAN_NWK_KEY;
 static const uint8_t user_app_key[16] = LORAWAN_APP_KEY;
 #endif
-
-/*!
- * @brief Multicast session keys.
- * Each element in the array represents a multicast session and contains a 3-dimensional array for the session keys:
- * - grp_addr: 4 bytes
- * - nwk_skey: 16 bytes
- * - app_skey: 16 bytes
- */
-static const uint8_t MULTICAST_KEYS[NUMBER_MULTICAST_SESSION][3][16] = {
-    {
-        /* Session 1 */
-        { 0x01, 0x02, 0x03, 0x04 }, /* grp_addr (4 bytes) */
-        { 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13,
-          0x14 }, /* nwk_skey (16 bytes) */
-        { 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23,
-          0x24 } /* app_skey (16 bytes) */
-    },
-    {
-        /* Session 2 */
-        { 0x25, 0x26, 0x27, 0x28 }, /* grp_addr (4 bytes) */
-        { 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37,
-          0x38 }, /* nwk_skey (16 bytes) */
-        { 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48,
-          0x49 } /* app_skey (16 bytes) */
-    }
-};
-
-/**
- * @brief Ping slot periodicity for multicast class B session
- * One of:
- *  MODEM_E_CLASS_B_PING_SLOT_1_S
- *  MODEM_E_CLASS_B_PING_SLOT_2_S
- *  MODEM_E_CLASS_B_PING_SLOT_4_S
- *  MODEM_E_CLASS_B_PING_SLOT_8_S
- *  MODEM_E_CLASS_B_PING_SLOT_16_S
- *  MODEM_E_CLASS_B_PING_SLOT_32_S
- *  MODEM_E_CLASS_B_PING_SLOT_64_S
- *  MODEM_E_CLASS_B_PING_SLOT_128_S
- */
-static const uint8_t MULTICAST_PING_SLOT_PERIODICITY[NUMBER_MULTICAST_SESSION] = {
-    MODEM_E_CLASS_B_PING_SLOT_8_S, MODEM_E_CLASS_B_PING_SLOT_16_S
-};
-
-#if( MULTICAST_SESSION_CLASS == LORAWAN_CLASS_B )
-/**
- * @brief Default multicast class b frequency per region opcode
- * The value 0 indicates that the multicast frequency should hop according to the beacon frequency.
- * The value -1 indicates that this configuration does not make sense for these frequency plans because they are not
- * specified.
- */
-static const uint32_t DEFAULT_MULTICAST_FREQ[13] = { 869525000, 923400000, 0,         0,         494900000,
-                                                     -1,        921600000, 916800000, 866550000, 923100000,
-                                                     868900000, -1,        917500000 };
-
-/**
- * @brief Default multicast class b datarate per region opcode
- * The value -1 indicates that this configuration does not make sense for these frequency plans because they are not
- * specified.
- */
-static const uint8_t DEFAULT_MULTICAST_DR[13] = { 3, 3, 8, 8, 2, -1, 3, 3, 4, 3, 3, -1, 3 };
-#else
-/**
- * @brief Default multicast class c frequency per region opcode
- */
-static const uint32_t DEFAULT_MULTICAST_FREQ[13] = { 869525000,  923200000, 923300000, 923300000, 492500000,
-                                                     2423000000, 921400000, 916600000, 866550000, 921900000,
-                                                     869100000,  505300000, 917300000 };
-/**
- * @brief Default multicast class c datarate per region opcode
- */
-static const uint32_t DEFAULT_MULTICAST_DR[13] = { 0, 2, 8, 8, 1, 0, 2, 2, 4, 0, 0, 0, 2 };
-#endif
-
-static const uint32_t MULTICAST_FREQUENCY = DEFAULT_MULTICAST_FREQ[LORAWAN_REGION_USED - 1];
-
-static const uint8_t MULTICAST_DATARATE = DEFAULT_MULTICAST_DR[LORAWAN_REGION_USED - 1];
 
 /*
  * -----------------------------------------------------------------------------
@@ -236,10 +138,6 @@ static const uint8_t MULTICAST_DATARATE = DEFAULT_MULTICAST_DR[LORAWAN_REGION_US
  * -----------------------------------------------------------------------------
  * --- PRIVATE VARIABLES -------------------------------------------------------
  */
-extern modem_e_t      modem_e;
-static volatile bool user_button_is_press = false;  // Flag for button status
-static volatile bool unicast_ready        = false;  // Flag for class applied
-static volatile bool multicast_started    = false;  // Flag for multicast started
 
 #if( USE_LR11XX_CREDENTIALS )
 /**
@@ -248,6 +146,19 @@ static volatile bool multicast_started    = false;  // Flag for multicast starte
 static uint8_t chip_eui[8] = { 0 };
 static uint8_t chip_pin[4] = { 0 };
 #endif
+
+extern modem_e_t modem_e;
+
+static uint8_t                          rx_payload[LORAWAN_APP_DATA_MAX_SIZE] = { 0 };  // Buffer for rx payload
+static uint8_t                          rx_payload_size = 0;      // Size of the payload in the rx_payload buffer
+static modem_e_downlink_metadata_t rx_metadata     = { 0 };  // Metadata of downlink
+static uint8_t                          rx_remaining    = 0;      // Remaining downlink payload in modem
+
+static volatile bool                              user_button_is_press = false;  // Flag for button status
+static volatile modem_e_certification_mode_t certif_running       = false;  // Certification mode enabled
+static uint32_t                                   uplink_counter       = 0;      // uplink sent counter
+static uint32_t                                   confirmed_counter    = 0;      // confirmed uplink counter
+
 /*
  * -----------------------------------------------------------------------------
  * --- PRIVATE FUNCTIONS DECLARATION -------------------------------------------
@@ -268,6 +179,11 @@ static void user_button_callback( void* context );
 static void main_handle_button_pushed( void* context );
 
 /**
+ * @brief Send the 32bits uplink counter and 32bits confirmed counter on chosen port
+ */
+static void send_uplinks_counter_on_port( uint8_t port );
+
+/**
  * @brief Send tx_frame_buffer on choosen port
  *
  */
@@ -281,10 +197,11 @@ static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const
 static void event_process( void* context );
 
 /**
- * @brief Convert modem_e_downlink_window_t to window name
- *
- */
-const char* get_downlink_window_name( modem_e_downlink_window_t window );
+ * @brief Set credentials and region
+ * 
+*/
+static void set_credentials_and_region(void* context);
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC FUNCTIONS DEFINITION ---------------------------------------------
@@ -299,7 +216,7 @@ int main( void )
     leds_blink( LED_ALL_MASK, 250, 4, true );
 
     HAL_DBG_TRACE_MSG( "\n\n" );
-    HAL_DBG_TRACE_INFO( "###### ===== Multicast example is starting ==== ######\n\n\n" );
+    HAL_DBG_TRACE_INFO( "###### ===== Certification example is starting ==== ######\n\n\n" );
 
     // Disable IRQ to avoid unwanted behavior during init
     hal_mcu_disable_irq( );
@@ -328,7 +245,6 @@ int main( void )
 
     /* Board is initialized */
     leds_blink( LED_TX_MASK, 100, 20, true );
-
     while( 1 )
     {
         // Check button
@@ -336,20 +252,6 @@ int main( void )
         {
             user_button_is_press = false;
             main_handle_button_pushed( &modem_e );
-        }
-
-        if( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_B )
-        {
-            modem_e_multicast_class_b_status_t multicast_status;
-            ASSERT_SMTC_MODEM_RC( modem_e_get_multicast_class_b_session_status( &modem_e, 0, &multicast_status ) );
-
-            if( ( multicast_status.is_session_waiting_for_beacon == 0 ) &&
-                ( multicast_status.is_session_started == 1 ) )
-            {
-                multicast_started = true;
-                HAL_DBG_TRACE_INFO( "###### ===== BEACON RECEIVED ==== ######\n\n\n" );
-                HAL_DBG_TRACE_PRINTF( "You can now send multicast downlinks\n\n" );
-            }
         }
 
         hal_mcu_disable_irq( );
@@ -387,62 +289,103 @@ static void event_process( void* context )
                 ASSERT_SMTC_MODEM_RC( modem_e_board_init(context));
                 get_and_print_crashlog( context );
 
-                unicast_ready     = false;
-                multicast_started = false;
+                ASSERT_SMTC_MODEM_RC( modem_e_get_certification_mode(
+                    context, ( modem_e_certification_mode_t* ) &certif_running ) );
+                print_certification( certif_running );
+                /* If certification mode is disabled,
+                set the credentials if needed, print them, and launch the join procedure */
+                if( certif_running == MODEM_E_CERTIFICATION_MODE_DISABLE )
+                {
+                    set_credentials_and_region(context);
+                    // Schedule a LoRaWAN network JoinRequest.
+                    ASSERT_SMTC_MODEM_RC( modem_e_join( context ) );
+                    HAL_DBG_TRACE_INFO( "###### ===== JOINING ==== ######\n\n\n" );
+                }
+                // Otherwise, just print the credentials
+                else
+                {
+                    uint8_t tmp_join_eui[8] = { 0 };
 #if( !USE_LR11XX_CREDENTIALS )
-                // Set user credentials
-                HAL_DBG_TRACE_INFO( "###### ===== LR1121 SET EUI and KEYS ==== ######\n\n" );
-                ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_dev_eui( context, user_dev_eui ) );
-                ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_join_eui( context, user_join_eui ) );
-                ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_app_key( context, user_app_key ) );
-                ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_nwk_key( context, user_nwk_key ) );
-                uint8_t tmp_pin[4] = { 0 };  // The chip_pin is not used if we use custom credentials
-                print_lorawan_credentials( user_dev_eui, user_join_eui, tmp_pin, USE_LR11XX_CREDENTIALS );
+                    uint8_t tmp_pin[4] = { 0 };  // The chip_pin is not used if we use custom credentials
+                    uint8_t tmp_dev_eui[8] = { 0 };
+                    ASSERT_SMTC_MODEM_RC( modem_e_get_otaa_dev_eui( context, tmp_dev_eui ) );
+                    ASSERT_SMTC_MODEM_RC( modem_e_get_otaa_join_eui( context, tmp_join_eui ) );
+                    print_lorawan_credentials( tmp_dev_eui, tmp_join_eui, tmp_pin, USE_LR11XX_CREDENTIALS );
 #else
-                // Get internal credentials
-                uint8_t tmp_join_eui[8] = { 0 };
-                ASSERT_SMTC_MODEM_RC( modem_e_system_read_uid( context, chip_eui ) );
-                ASSERT_SMTC_MODEM_RC( modem_e_system_read_pin( context, chip_pin ) );
-                ASSERT_SMTC_MODEM_RC( modem_e_get_otaa_join_eui( context, tmp_join_eui ) );
-                print_lorawan_credentials( chip_eui, tmp_join_eui, chip_pin, USE_LR11XX_CREDENTIALS );
+                    ASSERT_SMTC_MODEM_RC( modem_e_system_read_uid( context, chip_eui ) );
+                    ASSERT_SMTC_MODEM_RC( modem_e_system_read_pin( context, chip_pin ) );
+                    ASSERT_SMTC_MODEM_RC( modem_e_get_otaa_join_eui( context, tmp_join_eui ) );
+                    print_lorawan_credentials( chip_eui, tmp_join_eui, chip_pin, USE_LR11XX_CREDENTIALS );
 #endif
+                    modem_e_regions_t modem_region = MODEM_E_LORAWAN_REGION_EU868;  // Init to EU868
+                    get_and_print_lorawan_region_from_modem( context, &modem_region );
 
-                // Set user region
-                ASSERT_SMTC_MODEM_RC( modem_e_set_region( context, LORAWAN_REGION_USED ) );
-                print_lorawan_region( LORAWAN_REGION_USED );
+                    // Check for alignment between the region and JoinEUI configured in the Modem-E and those expected by the application.
+                    // There are two possible mismatches:
+                    // 1. The region configured in the Modem-E differs from the one used by the application (LORAWAN_REGION_USED).
+                    // 2. The JoinEUI stored in the Modem-E differs from the one expected by the application,
+                    //    and the application is not using LR11XX default credentials (USE_LR11XX_CREDENTIALS == false).
+                    // This typically indicates that the certification mode from a different region was not properly stopped
+                    // before flashing a new firmware.
+                    // In such cases, the ongoing join process must be stopped, the correct region and credentials must be set,
+                    // and the certification mode must be restarted.
+                    if( (modem_region != LORAWAN_REGION_USED) || 
+                        ((memcmp(user_join_eui, tmp_join_eui, sizeof(user_join_eui)) != 0) && (!USE_LR11XX_CREDENTIALS)) )
+                    {
+                        HAL_DBG_TRACE_ERROR(
+                            "Configuration mismatch:\n"
+                            "- Region Modem-E: 0x%02x vs App: 0x%02x\n"
+                            "- JoinEUI match: %s\n"
+                            "- Using LR11XX credentials: %s\n",
+                            modem_region, LORAWAN_REGION_USED,
+                            (memcmp(user_join_eui, tmp_join_eui, sizeof(user_join_eui)) == 0) ? "YES" : "NO",
+                            USE_LR11XX_CREDENTIALS ? "YES" : "NO" );
 
-                // Schedule a LoRaWAN network JoinRequest.
-                ASSERT_SMTC_MODEM_RC( modem_e_join( context ) );
-                HAL_DBG_TRACE_INFO( "###### ===== JOINING ==== ######\n\n\n" );
+                        HAL_DBG_TRACE_MSG("Mismatch detected, stopping join process...\n");
+                        modem_e_leave_network( context );
 
+                        HAL_DBG_TRACE_MSG("Disabling certification mode...\n");
+                        modem_e_set_certification_mode( context, MODEM_E_CERTIFICATION_MODE_DISABLE );
+
+                        HAL_DBG_TRACE_MSG("Reconfiguring credentials and region...\n\n");
+                        set_credentials_and_region( context );
+
+                        HAL_DBG_TRACE_MSG("Re-enabling certification mode...\n");
+                        modem_e_set_certification_mode( context, MODEM_E_CERTIFICATION_MODE_ENABLE );
+                    }
+                }
                 break;
 
             case MODEM_E_LORAWAN_EVENT_ALARM:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: ALARM\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                if( certif_running == MODEM_E_CERTIFICATION_MODE_ENABLE )
+                {
+                    modem_e_clear_alarm_timer( context );
+                }
+                else
+                {
+                    // Send periodical uplink on port 101
+                    send_uplinks_counter_on_port( 101 );
+                    // Restart periodical uplink alarm
+                    ASSERT_SMTC_MODEM_RC( modem_e_set_alarm_timer( context, PERIODICAL_UPLINK_DELAY_S ) );
+                }
                 break;
 
             case MODEM_E_LORAWAN_EVENT_JOINED:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: JOINED\n", HAL_DBG_TRACE_COLOR_BLUE );
                 HAL_DBG_TRACE_INFO( "Modem is now joined \n\n" );
 
+
                 uint8_t adr_custom_list[16] = { 0 };
                 ASSERT_SMTC_MODEM_RC( modem_e_set_adr_profile(
                     context, MODEM_E_ADR_PROFILE_NETWORK_SERVER_CONTROLLED, adr_custom_list ) );
 
-                ASSERT_SMTC_MODEM_RC( modem_e_set_class( context, MULTICAST_SESSION_CLASS ) );
-                for( uint8_t i = 0; i < NUMBER_MULTICAST_SESSION; i++ )
+                if( certif_running == MODEM_E_CERTIFICATION_MODE_DISABLE )
                 {
-                    uint32_t grp_addr = ( MULTICAST_KEYS[i][0][0] << 24 ) | ( MULTICAST_KEYS[i][0][1] << 16 ) |
-                                        ( MULTICAST_KEYS[i][0][2] << 8 ) | MULTICAST_KEYS[i][0][3];
-                    ASSERT_SMTC_MODEM_RC( modem_e_set_multicast_group_config(
-                        context, i, grp_addr, MULTICAST_KEYS[i][1], MULTICAST_KEYS[i][2] ) );
-                }
-                if( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_C )
-                {
-                    unicast_ready = true;
-                    // Send an uplink to enable the unicast class C session on NS
-                    uint8_t buff[8] = { 0 };
-                    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, 10, MODEM_E_UNCONFIRMED_TX ) );
+                    // Send first periodical uplink on port 101
+                    send_uplinks_counter_on_port( 101 );
+                    // start periodical uplink alarm
+                    ASSERT_SMTC_MODEM_RC( modem_e_set_alarm_timer( context, PERIODICAL_UPLINK_DELAY_S ) );
                 }
                 break;
 
@@ -459,11 +402,13 @@ static void event_process( void* context )
                 case MODEM_E_TX_NOT_SENT:
                 {
                     HAL_DBG_TRACE_PRINTF( " NOT SENT" );
+                    uplink_counter--;
                     break;
                 }
                 case MODEM_E_CONFIRMED_TX:
                 {
                     HAL_DBG_TRACE_PRINTF( " CONFIRMED - ACK" );
+                    confirmed_counter++;
                     break;
                 }
                 case MODEM_E_UNCONFIRMED_TX:
@@ -479,27 +424,16 @@ static void event_process( void* context )
                 HAL_DBG_TRACE_MSG( "\n\n" );
 
                 HAL_DBG_TRACE_INFO( "Transmission done \n" );
-                if( unicast_ready )
-                {
-                    HAL_DBG_TRACE_INFO(
-                        "Device unicast session setup - You can push the blue button to start the multicast "
-                        "session\n\n\n" );
-                }
-
                 break;
             }
 
             case MODEM_E_LORAWAN_EVENT_DOWN_DATA:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: DOWNDATA\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 // Get downlink data
-                uint8_t rx_payload[LORAWAN_APP_DATA_MAX_SIZE] = { 0 };  // Buffer for rx payload
-                uint8_t rx_payload_size                       = 0;      // Size of the payload in the rx_payload buffer
-                modem_e_downlink_metadata_t rx_metadata  = { 0 };  // Metadata of downlink
-                uint8_t                          rx_remaining = 0;      // Remaining downlink payload in modem
                 ASSERT_SMTC_MODEM_RC( modem_e_get_downlink_data_size( context, &rx_payload_size, &rx_remaining ) );
                 ASSERT_SMTC_MODEM_RC( modem_e_get_downlink_data( context, rx_payload, rx_payload_size ) );
                 ASSERT_SMTC_MODEM_RC( modem_e_get_downlink_metadata( context, &rx_metadata ) );
-                HAL_DBG_TRACE_PRINTF( "Data received on windows %s\n", get_downlink_window_name( rx_metadata.window ) );
+                HAL_DBG_TRACE_PRINTF( "Data received on port %u\n", rx_metadata.fport );
                 HAL_DBG_TRACE_ARRAY( "Received payload", rx_payload, rx_payload_size );
                 break;
 
@@ -517,13 +451,6 @@ static void event_process( void* context )
 
             case MODEM_E_LORAWAN_EVENT_CLASS_B_STATUS:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: CLASS_B_STATUS\n\n", HAL_DBG_TRACE_COLOR_BLUE );
-                if( ( current_event.data ) && ( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_B ) )
-                {
-                    unicast_ready = true;
-                    // Send an uplink to enable the unicast class C session on NS
-                    uint8_t buff[8] = { 0 };
-                    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, 10, MODEM_E_UNCONFIRMED_TX ) );
-                }
                 break;
 
             case MODEM_E_LORAWAN_EVENT_LORAWAN_MAC_TIME:
@@ -544,6 +471,10 @@ static void event_process( void* context )
 
             case MODEM_E_LORAWAN_EVENT_NO_MORE_MULTICAST_SESSION_CLASS_B:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: New MULTICAST CLASS_B\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                break;
+
+            case MODEM_E_LORAWAN_EVENT_REGIONAL_DUTY_CYCLE:
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: REGIONAL DUTY CYCLE\r\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
             case MODEM_E_LORAWAN_EVENT_RELAY_TX_DYNAMIC:
@@ -574,12 +505,42 @@ static void event_process( void* context )
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: DR_BACKOFF_LIMIT\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
             
+            case MODEM_E_LORAWAN_EVENT_RESET_REQUEST:  // MODEM_E_LORAWAN_EVENT_RESET_REQUEST
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: RESET_REQUEST\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                modem_e_system_reboot( context, false );
+                break;
+
             default:
                 HAL_DBG_TRACE_INFO( "Event not handled 0x%02x\n", current_event.event_type );
                 break;
             }
         }
     } while( rc_event != MODEM_E_RESPONSE_CODE_NO_EVENT );
+}
+
+static void set_credentials_and_region(void* context)
+{
+#if( !USE_LR11XX_CREDENTIALS )
+    // Set user credentials
+    HAL_DBG_TRACE_INFO( "###### ===== LR1121 SET EUI and KEYS ==== ######\n\n" );
+    ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_dev_eui( context, user_dev_eui ) );
+    ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_join_eui( context, user_join_eui ) );
+    ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_app_key( context, user_app_key ) );
+    ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_nwk_key( context, user_nwk_key ) );
+    uint8_t tmp_pin[4] = { 0 };  // The chip_pin is not used if we use custom credentials
+    print_lorawan_credentials( user_dev_eui, user_join_eui, tmp_pin, USE_LR11XX_CREDENTIALS );
+#else
+    // Get internal credentials
+    uint8_t tmp_join_eui[8] = { 0 };
+    ASSERT_SMTC_MODEM_RC( modem_e_system_read_uid( context, chip_eui ) );
+    ASSERT_SMTC_MODEM_RC( modem_e_system_read_pin( context, chip_pin ) );
+    ASSERT_SMTC_MODEM_RC( modem_e_get_otaa_join_eui( context, tmp_join_eui ) );
+    print_lorawan_credentials( chip_eui, tmp_join_eui, chip_pin, USE_LR11XX_CREDENTIALS );
+#endif
+    // Set user region
+    ASSERT_SMTC_MODEM_RC( modem_e_set_region( context, LORAWAN_REGION_USED ) );
+    print_lorawan_region( LORAWAN_REGION_USED );
+
 }
 
 static void user_button_callback( void* context )
@@ -600,52 +561,36 @@ static void user_button_callback( void* context )
 
 static void main_handle_button_pushed( void* context )
 {
-    if( unicast_ready )
+    if( certif_running == MODEM_E_CERTIFICATION_MODE_ENABLE )
     {
-        // The device class is setup, we can start or stop the multicast session
-        if( multicast_started )
-        {
-            // The multicast session is started, the action is to stop the session
-            if( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_B )
-            {
-                ASSERT_SMTC_MODEM_RC( modem_e_stop_all_session_multicast_class_b( context ) );
-            }
-            else
-            {
-                ASSERT_SMTC_MODEM_RC( modem_e_stop_all_session_multicast_class_c( context ) );
-            }
-            multicast_started = false;
-            HAL_DBG_TRACE_INFO( "###### ===== STOP MULTICAST SESSION(S) ==== ######\n\n\n" );
-        }
-        else
-        {
-            // The multicast session is not started, the action is to start the session
-            for( uint8_t i = 0; i < NUMBER_MULTICAST_SESSION; i++ )
-            {
-                if( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_B )
-                {
-                    ASSERT_SMTC_MODEM_RC( modem_e_start_session_multicast_class_b(
-                        context, i, MULTICAST_FREQUENCY, MULTICAST_DATARATE, MULTICAST_PING_SLOT_PERIODICITY[i] ) );
-                    HAL_DBG_TRACE_INFO( "###### ===== START MULTICAST SESSION n°%d ==== ######\n\n\n", i + 1 );
-                    HAL_DBG_TRACE_PRINTF( "Wait for beacon reception...\n\n" );
-                }
-                else
-                {
-                    ASSERT_SMTC_MODEM_RC( modem_e_start_session_multicast_class_c( context, i, MULTICAST_FREQUENCY,
-                                                                                        MULTICAST_DATARATE ) );
-
-                    HAL_DBG_TRACE_INFO( "###### ===== START MULTICAST SESSION n°%d ==== ######\n\n\n", i + 1 );
-                    HAL_DBG_TRACE_PRINTF( "You can now send multicast downlinks\n\n" );
-                }
-            }
-            multicast_started = true;
-        }
+        ASSERT_SMTC_MODEM_RC( modem_e_set_certification_mode( context, MODEM_E_CERTIFICATION_MODE_DISABLE ) );
+        ASSERT_SMTC_MODEM_RC( modem_e_leave_network( context ) );
+        ASSERT_SMTC_MODEM_RC( modem_e_join( context ) );
+        certif_running = MODEM_E_CERTIFICATION_MODE_DISABLE;
     }
     else
     {
-        multicast_started = false;
-        HAL_DBG_TRACE_PRINTF( "UNICAST SESSION NOT READY\n\n" );
+        ASSERT_SMTC_MODEM_RC( modem_e_set_certification_mode( context, MODEM_E_CERTIFICATION_MODE_ENABLE ) );
+        certif_running = MODEM_E_CERTIFICATION_MODE_ENABLE;
     }
+    print_certification( certif_running );
+}
+
+static void send_uplinks_counter_on_port( uint8_t port )
+{
+    // Send uplink and confirmed counter
+    uint8_t buff[8] = { 0 };
+    buff[0]         = ( uplink_counter >> 24 ) & 0xFF;
+    buff[1]         = ( uplink_counter >> 16 ) & 0xFF;
+    buff[2]         = ( uplink_counter >> 8 ) & 0xFF;
+    buff[3]         = ( uplink_counter & 0xFF );
+    buff[0]         = ( confirmed_counter >> 24 ) & 0xFF;
+    buff[1]         = ( confirmed_counter >> 16 ) & 0xFF;
+    buff[2]         = ( confirmed_counter >> 8 ) & 0xFF;
+    buff[3]         = ( confirmed_counter & 0xFF );
+    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, port, true ) );
+    // Increment uplink counter
+    uplink_counter++;
 }
 
 static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const uint8_t tx_frame_buffer_size,
@@ -694,41 +639,6 @@ static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const
                              modem_response_code );
     }
     return modem_response_code;
-}
-
-const char* get_downlink_window_name( modem_e_downlink_window_t window )
-{
-    switch( window )
-    {
-    case MODEM_E_DOWNLINK_WINDOW_RX1:
-        return "MODEM_E_DOWNLINK_WINDOW_RX1";
-    case MODEM_E_DOWNLINK_WINDOW_RX2:
-        return "MODEM_E_DOWNLINK_WINDOW_RX2";
-    case MODEM_E_DOWNLINK_WINDOW_RXC:
-        return "MODEM_E_DOWNLINK_WINDOW_RXC";
-    case MODEM_E_DOWNLINK_WINDOW_RXC_MULTICAST_GROUP0:
-        return "MODEM_E_DOWNLINK_WINDOW_RXC_MULTICAST_GROUP0";
-    case MODEM_E_DOWNLINK_WINDOW_RXC_MULTICAST_GROUP1:
-        return "MODEM_E_DOWNLINK_WINDOW_RXC_MULTICAST_GROUP1";
-    case MODEM_E_DOWNLINK_WINDOW_RXC_MULTICAST_GROUP2:
-        return "MODEM_E_DOWNLINK_WINDOW_RXC_MULTICAST_GROUP2";
-    case MODEM_E_DOWNLINK_WINDOW_RXC_MULTICAST_GROUP3:
-        return "MODEM_E_DOWNLINK_WINDOW_RXC_MULTICAST_GROUP3";
-    case MODEM_E_DOWNLINK_WINDOW_RXB:
-        return "MODEM_E_DOWNLINK_WINDOW_RXB";
-    case MODEM_E_DOWNLINK_WINDOW_RXB_MULTICAST_GROUP0:
-        return "MODEM_E_DOWNLINK_WINDOW_RXB_MULTICAST_GROUP0";
-    case MODEM_E_DOWNLINK_WINDOW_RXB_MULTICAST_GROUP1:
-        return "MODEM_E_DOWNLINK_WINDOW_RXB_MULTICAST_GROUP1";
-    case MODEM_E_DOWNLINK_WINDOW_RXB_MULTICAST_GROUP2:
-        return "MODEM_E_DOWNLINK_WINDOW_RXB_MULTICAST_GROUP2";
-    case MODEM_E_DOWNLINK_WINDOW_RXB_MULTICAST_GROUP3:
-        return "MODEM_E_DOWNLINK_WINDOW_RXB_MULTICAST_GROUP3";
-    case MODEM_E_DOWNLINK_WINDOW_RXBEACON:
-        return "MODEM_E_DOWNLINK_WINDOW_RXBEACON";
-    default:
-        return "UNKNOWN_WINDOW";
-    }
 }
 
 /* --- EOF ------------------------------------------------------------------ */

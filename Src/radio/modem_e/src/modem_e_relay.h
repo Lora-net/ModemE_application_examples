@@ -1,10 +1,10 @@
-/**
- * @file      common_app_configuration.h
+/*!
+ * @file      modem_e_relay.h
  *
- * @brief     App configuration common to all apps
+ * @brief     Relay driver for Modem-E
  *
  * The Clear BSD License
- * Copyright Semtech Corporation 2024. All rights reserved.
+ * Copyright Semtech Corporation 2026. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted (subject to the limitations in the disclaimer
@@ -32,8 +32,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COMMON_APP_CONFIGURATION_H
-#define COMMON_APP_CONFIGURATION_H
+#ifndef MODEM_E_RELAY_H
+#define MODEM_E_RELAY_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,53 +44,13 @@ extern "C" {
  * --- DEPENDENCIES ------------------------------------------------------------
  */
 
+#include "modem_e_common.h"
+#include "modem_e_relay_types.h"
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC MACROS -----------------------------------------------------------
  */
-
-/**
- * @brief Watchdog counter reload value during sleep (The period must be lower than MCU watchdog period (here 20s))
- */
-#ifndef WATCHDOG_RELOAD_PERIOD_MS
-#define WATCHDOG_RELOAD_PERIOD_MS 20000
-#endif  // WATCHDOG_RELOAD_PERIOD_MS
-
-/*!
- * @brief User application data buffer size
- */
-#ifndef LORAWAN_APP_DATA_MAX_SIZE
-#define LORAWAN_APP_DATA_MAX_SIZE 242
-#endif  // LORAWAN_APP_DATA_MAX_SIZE
-
-/*!
- * @brief LoRaWAN regulatory region.
- * One of:
- * MODEM_E_LORAWAN_REGION_AS923_GRP1
- * MODEM_E_LORAWAN_REGION_AS923_GRP2
- * MODEM_E_LORAWAN_REGION_AS923_GRP3
- * MODEM_E_LORAWAN_REGION_AS923_GRP4
- * MODEM_E_LORAWAN_REGION_AU915
- * MODEM_E_LORAWAN_REGION_CN470
- * MODEM_E_LORAWAN_REGION_EU868
- * MODEM_E_LORAWAN_REGION_IN865
- * MODEM_E_LORAWAN_REGION_KR920
- * MODEM_E_LORAWAN_REGION_RU864
- * MODEM_E_LORAWAN_REGION_US915
- */
-#ifndef LORAWAN_REGION_USED
-#define LORAWAN_REGION_USED MODEM_E_LORAWAN_REGION_AU915
-#endif  // LORAWAN_REGION_USED
-
-/**
- * @brief Periodical uplink alarm delay in seconds
- */
-#ifndef PERIODICAL_UPLINK_DELAY_S
-#define PERIODICAL_UPLINK_DELAY_S 30
-#endif  // PERIODICAL_UPLINK_DELAY_S
-
-
-
 
 /*
  * -----------------------------------------------------------------------------
@@ -107,10 +67,32 @@ extern "C" {
  * --- PUBLIC FUNCTIONS PROTOTYPES ---------------------------------------------
  */
 
+/*!
+ * @brief Get the Tx relay configuration
+ *
+ * @param [in] context Chip implementation context
+ * @param [out] configuration Tx relay configuration
+ *
+ * @returns Operation status
+ */
+modem_e_response_code_t modem_e_relay_get_tx_config( const void*                       context,
+                                                     modem_e_relay_tx_configuration_t* configuration );
+
+/*!
+ * @brief Set the Tx relay configuration
+ *
+ * @param [in] context Chip implementation context
+ * @param [out] configuration Tx relay configuration to set
+ *
+ * @returns Operation status
+ */
+modem_e_response_code_t modem_e_relay_set_tx_config( const void*                             context,
+                                                     const modem_e_relay_tx_configuration_t* configuration );
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // COMMON_APP_CONFIGURATION_H
+#endif  // MODEM_E_RELAY_H
 
 /* --- EOF ------------------------------------------------------------------ */

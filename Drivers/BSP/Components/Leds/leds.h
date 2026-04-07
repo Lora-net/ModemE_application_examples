@@ -56,26 +56,26 @@ extern "C" {
 
 typedef enum
 {
-    LR1121_EVK_LED_TX,
-    LR1121_EVK_LED_RX,
-    LR1121_EVK_LED_SCAN,
-    LR1121_EVK_LED_COUNT
-} lr1121_evk_led_t;
+    MODEM_E_EVK_LED_TX,
+    MODEM_E_EVK_LED_RX,
+    MODEM_E_EVK_LED_SCAN,
+    MODEM_E_EVK_LED_COUNT
+} modem_e_evk_led_t;
 
 /**
  * @brief LED TX MASK
  */
-#define LED_TX_MASK ( 1 << LR1121_EVK_LED_TX )
+#define LED_TX_MASK ( 1 << MODEM_E_EVK_LED_TX )
 
 /**
  * @brief LED RX MASK
  */
-#define LED_RX_MASK ( 1 << LR1121_EVK_LED_RX )
+#define LED_RX_MASK ( 1 << MODEM_E_EVK_LED_RX )
 
 /**
  * @brief LED SCAN MASK
  */
-#define LED_SCAN_MASK ( 1 << LR1121_EVK_LED_SCAN )
+#define LED_SCAN_MASK ( 1 << MODEM_E_EVK_LED_SCAN )
 
 /**
  * @brief LED ALL MASK

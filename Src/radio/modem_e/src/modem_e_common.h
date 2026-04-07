@@ -1,10 +1,10 @@
-/**
- * @file      common_app_configuration.h
+/*!
+ * @file      modem_e_common.h
  *
- * @brief     App configuration common to all apps
+ * @brief     modem driver common definition
  *
  * The Clear BSD License
- * Copyright Semtech Corporation 2024. All rights reserved.
+ * Copyright Semtech Corporation 2026. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted (subject to the limitations in the disclaimer
@@ -32,8 +32,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COMMON_APP_CONFIGURATION_H
-#define COMMON_APP_CONFIGURATION_H
+#ifndef MODEM_E_COMMON_H
+#define MODEM_E_COMMON_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,53 +44,13 @@ extern "C" {
  * --- DEPENDENCIES ------------------------------------------------------------
  */
 
+#include <stdbool.h>
+#include <stdint.h>
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC MACROS -----------------------------------------------------------
  */
-
-/**
- * @brief Watchdog counter reload value during sleep (The period must be lower than MCU watchdog period (here 20s))
- */
-#ifndef WATCHDOG_RELOAD_PERIOD_MS
-#define WATCHDOG_RELOAD_PERIOD_MS 20000
-#endif  // WATCHDOG_RELOAD_PERIOD_MS
-
-/*!
- * @brief User application data buffer size
- */
-#ifndef LORAWAN_APP_DATA_MAX_SIZE
-#define LORAWAN_APP_DATA_MAX_SIZE 242
-#endif  // LORAWAN_APP_DATA_MAX_SIZE
-
-/*!
- * @brief LoRaWAN regulatory region.
- * One of:
- * MODEM_E_LORAWAN_REGION_AS923_GRP1
- * MODEM_E_LORAWAN_REGION_AS923_GRP2
- * MODEM_E_LORAWAN_REGION_AS923_GRP3
- * MODEM_E_LORAWAN_REGION_AS923_GRP4
- * MODEM_E_LORAWAN_REGION_AU915
- * MODEM_E_LORAWAN_REGION_CN470
- * MODEM_E_LORAWAN_REGION_EU868
- * MODEM_E_LORAWAN_REGION_IN865
- * MODEM_E_LORAWAN_REGION_KR920
- * MODEM_E_LORAWAN_REGION_RU864
- * MODEM_E_LORAWAN_REGION_US915
- */
-#ifndef LORAWAN_REGION_USED
-#define LORAWAN_REGION_USED MODEM_E_LORAWAN_REGION_AU915
-#endif  // LORAWAN_REGION_USED
-
-/**
- * @brief Periodical uplink alarm delay in seconds
- */
-#ifndef PERIODICAL_UPLINK_DELAY_S
-#define PERIODICAL_UPLINK_DELAY_S 30
-#endif  // PERIODICAL_UPLINK_DELAY_S
-
-
-
 
 /*
  * -----------------------------------------------------------------------------
@@ -102,6 +62,36 @@ extern "C" {
  * --- PUBLIC TYPES ------------------------------------------------------------
  */
 
+/*!
+ * @brief Command group identifier
+ */
+typedef enum
+{
+    MODEM_E_GROUP_ID_BSP     = 0x0600,  //!< Group ID for BSP commands
+    MODEM_E_GROUP_ID_MODEM   = 0x0601,  //!< Group ID for modem commands
+    MODEM_E_GROUP_ID_LORAWAN = 0x0602,  //!< Group ID for LoRaWAN commands
+    MODEM_E_GROUP_ID_RELAY   = 0x0603,  //!< Group ID for relay commands
+} modem_e_api_group_id_t;
+
+/*!
+ * @brief Command return code (RC)
+ */
+typedef enum
+{
+    MODEM_E_RESPONSE_CODE_OK              = 0x00,  //!< Driver command executed successfully
+    MODEM_E_RESPONSE_CODE_UNKOWN          = 0x01,  //!< Command code unknown
+    MODEM_E_RESPONSE_CODE_NOT_IMPLEMENTED = 0x02,  //!< Command not implemented
+    MODEM_E_RESPONSE_CODE_NOT_INITIALIZED = 0x03,  //!< Command not initialized
+    MODEM_E_RESPONSE_CODE_INVALID         = 0x04,  //!< Invalid command parameters
+    MODEM_E_RESPONSE_CODE_BUSY            = 0x05,  //!< Command cannot be executed now
+    MODEM_E_RESPONSE_CODE_FAIL            = 0x06,  //!< Command execution failed
+    MODEM_E_RESPONSE_CODE_BAD_CRC         = 0x08,  //!< CRC check failed
+    MODEM_E_RESPONSE_CODE_BAD_SIZE        = 0x0A,  //!< Size check failed
+    MODEM_E_RESPONSE_CODE_FRAME_ERROR     = 0x0F,  //!< SPI command checksum failed or CRC failed
+    MODEM_E_RESPONSE_CODE_NO_TIME         = 0x10,  //!< Modem time is not synchronized
+    MODEM_E_RESPONSE_CODE_NO_EVENT        = 0x12,  //!< No Event
+} modem_e_response_code_t;
+
 /*
  * -----------------------------------------------------------------------------
  * --- PUBLIC FUNCTIONS PROTOTYPES ---------------------------------------------
@@ -111,6 +101,6 @@ extern "C" {
 }
 #endif
 
-#endif  // COMMON_APP_CONFIGURATION_H
+#endif  // MODEM_E_COMMON_H
 
 /* --- EOF ------------------------------------------------------------------ */

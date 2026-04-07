@@ -2,7 +2,7 @@
  * @ingroup   apps_lorawan
  * @file      main_lorawan.c
  *
- * @brief     lr1121 Modem-E Class A/C device implementation
+ * @brief     modem_e Modem-E Class A/C device implementation
  *
  * @copyright
  * @parblock
@@ -38,7 +38,7 @@
 
 /*!
  * @addtogroup apps_lorawan
- * lr1121 Modem-E Class A/C device implementation
+ * modem_e Modem-E Class A/C device implementation
  * @{
  */
 
@@ -50,10 +50,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "lorawan_commissioning.h"
-#include "lr1121_modem_board.h"
+#include "modem_e_board.h"
 #include "apps_utilities.h"
-#include "lr1121_modem_helper.h"
-#include "lr1121_modem_system_types.h"
+#include "modem_e_helper.h"
+#include "modem_e_system_types.h"
 #include "common_app_configuration.h"
 
 /*
@@ -68,9 +68,9 @@
 #define str( a ) #a
 
 /*!
- * @brief Helper macro that returned a human-friendly message if a command does not return LR1121_MODEM_RESPONSE_CODE_OK
+ * @brief Helper macro that returned a human-friendly message if a command does not return MODEM_E_RESPONSE_CODE_OK
  *
- * @remark The macro is implemented to be used with functions returning a @ref lr1121_modem_return_code_t
+ * @remark The macro is implemented to be used with functions returning a @ref modem_e_response_code_t
  *
  * @param[in] rc  Return code
  */
@@ -78,36 +78,36 @@
 #define ASSERT_SMTC_MODEM_RC( rc_func )                                                        \
     do                                                                                         \
     {                                                                                          \
-        lr1121_modem_response_code_t rc = rc_func;                                             \
-        if( rc == LR1121_MODEM_RESPONSE_CODE_NOT_INITIALIZED )                                 \
+        modem_e_response_code_t rc = rc_func;                                             \
+        if( rc == MODEM_E_RESPONSE_CODE_NOT_INITIALIZED )                                 \
         {                                                                                      \
             HAL_DBG_TRACE_ERROR( "In %s - %s (line %d): %s\n", __FILE__, __func__, __LINE__,   \
-                                 xstr( LR1121_MODEM_RESPONSE_CODE_NOT_INITIALIZED ) );         \
+                                 xstr( MODEM_E_RESPONSE_CODE_NOT_INITIALIZED ) );         \
         }                                                                                      \
-        else if( rc == LR1121_MODEM_RESPONSE_CODE_INVALID )                                    \
+        else if( rc == MODEM_E_RESPONSE_CODE_INVALID )                                    \
         {                                                                                      \
             HAL_DBG_TRACE_ERROR( "In %s - %s (line %d): %s\n", __FILE__, __func__, __LINE__,   \
-                                 xstr( LR1121_MODEM_RESPONSE_CODE_INVALID ) );                 \
+                                 xstr( MODEM_E_RESPONSE_CODE_INVALID ) );                 \
         }                                                                                      \
-        else if( rc == LR1121_MODEM_RESPONSE_CODE_BUSY )                                       \
+        else if( rc == MODEM_E_RESPONSE_CODE_BUSY )                                       \
         {                                                                                      \
             HAL_DBG_TRACE_ERROR( "In %s - %s (line %d): %s\n", __FILE__, __func__, __LINE__,   \
-                                 xstr( LR1121_MODEM_RESPONSE_CODE_BUSY ) );                    \
+                                 xstr( MODEM_E_RESPONSE_CODE_BUSY ) );                    \
         }                                                                                      \
-        else if( rc == LR1121_MODEM_RESPONSE_CODE_FAIL )                                       \
+        else if( rc == MODEM_E_RESPONSE_CODE_FAIL )                                       \
         {                                                                                      \
             HAL_DBG_TRACE_ERROR( "In %s - %s (line %d): %s\n", __FILE__, __func__, __LINE__,   \
-                                 xstr( LR1121_MODEM_RESPONSE_CODE_FAIL ) );                    \
+                                 xstr( MODEM_E_RESPONSE_CODE_FAIL ) );                    \
         }                                                                                      \
-        else if( rc == LR1121_MODEM_RESPONSE_CODE_NO_TIME )                                    \
+        else if( rc == MODEM_E_RESPONSE_CODE_NO_TIME )                                    \
         {                                                                                      \
             HAL_DBG_TRACE_WARNING( "In %s - %s (line %d): %s\n", __FILE__, __func__, __LINE__, \
-                                   xstr( LR1121_MODEM_RESPONSE_CODE_NO_TIME ) );               \
+                                   xstr( MODEM_E_RESPONSE_CODE_NO_TIME ) );               \
         }                                                                                      \
-        else if( rc == LR1121_MODEM_RESPONSE_CODE_NO_EVENT )                                   \
+        else if( rc == MODEM_E_RESPONSE_CODE_NO_EVENT )                                   \
         {                                                                                      \
             HAL_DBG_TRACE_INFO( "In %s - %s (line %d): %s\n", __FILE__, __func__, __LINE__,    \
-                                xstr( LR1121_MODEM_RESPONSE_CODE_NO_EVENT ) );                 \
+                                xstr( MODEM_E_RESPONSE_CODE_NO_EVENT ) );                 \
         }                                                                                      \
     } while( 0 )
 
@@ -146,7 +146,7 @@ static uint8_t chip_eui[8] = { 0 };
 static uint8_t chip_pin[4] = { 0 };
 #endif
 
-extern lr1121_t lr1121;
+extern modem_e_t modem_e;
 
 static volatile bool user_button_is_press = false;  // Flag indicating if the button is pressed
 static uint32_t      uplink_counter       = 0;      // Counter for uplinks sent
@@ -174,8 +174,8 @@ static void send_uplinks_counter_on_port( uint8_t port );
  * @brief Send tx_frame_buffer on choosen port
  *
  */
-static lr1121_modem_response_code_t send_frame( const uint8_t* tx_frame_buffer, const uint8_t tx_frame_buffer_size,
-                                                uint8_t port, const lr1121_modem_uplink_type_t tx_confirmed );
+static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const uint8_t tx_frame_buffer_size,
+                                                uint8_t port, const modem_e_uplink_type_t tx_confirmed );
 
 /**
  * @brief Process received events
@@ -212,13 +212,13 @@ int main( void )
 
     // Configure event callback on interrupt
     hal_gpio_irq_t event_callback = {
-        .pin      = lr1121.event.pin,
-        .context  = &lr1121,        // context passed to the callback
+        .pin      = modem_e.event.pin,
+        .context  = &modem_e,        // context passed to the callback
         .callback = event_process,  // callback called when event pin is triggered
     };
-    hal_gpio_init_in( lr1121.event.pin, HAL_GPIO_PULL_MODE_NONE, HAL_GPIO_IRQ_MODE_RISING, &event_callback );
+    hal_gpio_init_in( modem_e.event.pin, HAL_GPIO_PULL_MODE_DOWN, HAL_GPIO_IRQ_MODE_RISING, &event_callback );
 
-    lr1121_modem_system_reboot( &lr1121, false );
+    modem_e_system_reboot( &modem_e, false );
 
     // Init done: enable interruption
     hal_mcu_enable_irq( );
@@ -234,10 +234,10 @@ int main( void )
         {
             user_button_is_press = false;
             HAL_DBG_TRACE_MSG( "Button pushed\n\n" );
-            lr1121_modem_lorawan_status_t modem_status;
-            lr1121_modem_get_status( &lr1121, &modem_status );
+            modem_e_lorawan_status_t modem_status;
+            modem_e_get_status( &modem_e, &modem_status );
             // Check if the device has already joined a network
-            if( ( modem_status & LR1121_LORAWAN_JOINED ) == LR1121_LORAWAN_JOINED )
+            if( ( modem_status & MODEM_E_LORAWAN_JOINED ) == MODEM_E_LORAWAN_JOINED )
             {
                 if( uplink_sending == false )
                 {
@@ -276,93 +276,93 @@ int main( void )
 static void event_process( void* context )
 {
     // Continue to read modem events until all of them have been processed.
-    lr1121_modem_response_code_t rc_event = LR1121_MODEM_RESPONSE_CODE_OK;
+    modem_e_response_code_t rc_event = MODEM_E_RESPONSE_CODE_OK;
     do
     {
         // Read modem event
-        lr1121_modem_event_fields_t current_event;
-        rc_event = lr1121_modem_get_event( context, &current_event );
-        if( rc_event == LR1121_MODEM_RESPONSE_CODE_OK )
+        modem_e_event_fields_t current_event;
+        rc_event = modem_e_get_event( context, &current_event );
+        if( rc_event == MODEM_E_RESPONSE_CODE_OK )
         {
             switch( current_event.event_type )
             {
-            case LR1121_MODEM_LORAWAN_EVENT_RESET:
+            case MODEM_E_LORAWAN_EVENT_RESET:
 
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: RESET\n\n", HAL_DBG_TRACE_COLOR_BLUE );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_board_init(context));
+                ASSERT_SMTC_MODEM_RC( modem_e_board_init(context));
                 get_and_print_crashlog( context );
 
 #if( !USE_LR11XX_CREDENTIALS )
                 // Set user credentials
                 HAL_DBG_TRACE_INFO( "###### ===== LR1121 SET EUI and KEYS ==== ######\n\n" );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_dev_eui( context, user_dev_eui ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_join_eui( context, user_join_eui ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_app_key( context, user_app_key ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_nwk_key( context, user_nwk_key ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_dev_eui( context, user_dev_eui ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_join_eui( context, user_join_eui ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_app_key( context, user_app_key ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_otaa_nwk_key( context, user_nwk_key ) );
                 uint8_t tmp_pin[4] = { 0 };  // The chip_pin is not used if we use custom credentials
                 print_lorawan_credentials( user_dev_eui, user_join_eui, tmp_pin, USE_LR11XX_CREDENTIALS );
 #else
                 // Get internal credentials
                 uint8_t tmp_join_eui[8] = { 0 };
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_system_read_uid( context, chip_eui ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_system_read_pin( context, chip_pin ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_get_join_eui( context, tmp_join_eui ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_system_read_uid( context, chip_eui ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_system_read_pin( context, chip_pin ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_get_otaa_join_eui( context, tmp_join_eui ) );
                 print_lorawan_credentials( chip_eui, tmp_join_eui, chip_pin, USE_LR11XX_CREDENTIALS );
 #endif
 
                 // Set user region
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_region( context, LORAWAN_REGION_USED ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_region( context, LORAWAN_REGION_USED ) );
                 print_lorawan_region( LORAWAN_REGION_USED );
                 // Schedule a LoRaWAN network JoinRequest.
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_join( context ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_join( context ) );
                 HAL_DBG_TRACE_INFO( "###### ===== JOINING ==== ######\n\n\n" );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_ALARM:
+            case MODEM_E_LORAWAN_EVENT_ALARM:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: ALARM\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 // Send periodical uplink on port 101
                 send_uplinks_counter_on_port( 101 );
                 // Restart periodical uplink alarm
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_alarm_timer( context, PERIODICAL_UPLINK_DELAY_S ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_alarm_timer( context, PERIODICAL_UPLINK_DELAY_S ) );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_JOINED:
+            case MODEM_E_LORAWAN_EVENT_JOINED:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: JOINED\n", HAL_DBG_TRACE_COLOR_BLUE );
                 HAL_DBG_TRACE_INFO( "Modem is now joined \n\n" );
 
                 uint8_t adr_custom_list[16] = { 0 };
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_adr_profile(
-                    context, LR1121_MODEM_ADR_PROFILE_NETWORK_SERVER_CONTROLLED, adr_custom_list ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_adr_profile(
+                    context, MODEM_E_ADR_PROFILE_NETWORK_SERVER_CONTROLLED, adr_custom_list ) );
                     
                 // Send first periodical uplink on port 101
                 send_uplinks_counter_on_port( 101 );
                 // start periodical uplink alarm
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_set_alarm_timer( context, PERIODICAL_UPLINK_DELAY_S ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_alarm_timer( context, PERIODICAL_UPLINK_DELAY_S ) );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_TX_DONE:
+            case MODEM_E_LORAWAN_EVENT_TX_DONE:
             {
-                const lr1121_modem_tx_done_event_t tx_done_event_data =
-                    ( lr1121_modem_tx_done_event_t )( current_event.data >> 8 );
+                const modem_e_tx_done_event_t tx_done_event_data =
+                    ( modem_e_tx_done_event_t )( current_event.data >> 8 );
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: TXDONE\n\n", HAL_DBG_TRACE_COLOR_BLUE );
 
                 HAL_DBG_TRACE_MSG( "TX DATA     : " );
 
                 switch( tx_done_event_data )
                 {
-                case LR1121_MODEM_TX_NOT_SENT:
+                case MODEM_E_TX_NOT_SENT:
                 {
                     HAL_DBG_TRACE_PRINTF( " NOT SENT" );
                     uplink_counter--;
                     break;
                 }
-                case LR1121_MODEM_CONFIRMED_TX:
+                case MODEM_E_CONFIRMED_TX:
                 {
                     HAL_DBG_TRACE_PRINTF( " CONFIRMED - ACK" );
                     confirmed_counter++;
                     break;
                 }
-                case LR1121_MODEM_UNCONFIRMED_TX:
+                case MODEM_E_UNCONFIRMED_TX:
                 {
                     HAL_DBG_TRACE_MSG( " UNCONFIRMED\n\n" );
                     break;
@@ -379,61 +379,90 @@ static void event_process( void* context )
                 break;
             }
 
-            case LR1121_MODEM_LORAWAN_EVENT_DOWN_DATA:
+            case MODEM_E_LORAWAN_EVENT_DOWN_DATA:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: DOWNDATA\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 uint8_t rx_payload[LORAWAN_APP_DATA_MAX_SIZE] = { 0 };  // Buffer for rx payload
                 uint8_t rx_payload_size                       = 0;      // Size of the payload in the rx_payload buffer
-                lr1121_modem_downlink_metadata_t rx_metadata  = { 0 };  // Metadata of downlink
+                modem_e_downlink_metadata_t rx_metadata  = { 0 };  // Metadata of downlink
                 uint8_t                          rx_remaining = 0;      // Remaining downlink payload in modem
                 // Get downlink data
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_get_downlink_data_size( context, &rx_payload_size, &rx_remaining ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_get_downlink_data( context, rx_payload, rx_payload_size ) );
-                ASSERT_SMTC_MODEM_RC( lr1121_modem_get_downlink_metadata( context, &rx_metadata ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_get_downlink_data_size( context, &rx_payload_size, &rx_remaining ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_get_downlink_data( context, rx_payload, rx_payload_size ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_get_downlink_metadata( context, &rx_metadata ) );
                 HAL_DBG_TRACE_PRINTF( "Data received on port %u\n", rx_metadata.fport );
                 HAL_DBG_TRACE_ARRAY( "Received payload", rx_payload, rx_payload_size );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_JOIN_FAIL:
+            case MODEM_E_LORAWAN_EVENT_JOIN_FAIL:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: JOINFAIL\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_LINK_CHECK:
+            case MODEM_E_LORAWAN_EVENT_LINK_CHECK:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: LINK_CHECK\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_CLASS_B_PING_SLOT_INFO:
+            case MODEM_E_LORAWAN_EVENT_CLASS_B_PING_SLOT_INFO:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: CLASS_B_PING_SLOT_INFO\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_CLASS_B_STATUS:
+            case MODEM_E_LORAWAN_EVENT_CLASS_B_STATUS:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: CLASS_B_STATUS\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_LORAWAN_MAC_TIME:
+            case MODEM_E_LORAWAN_EVENT_LORAWAN_MAC_TIME:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: LORAWAN MAC TIME\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_NEW_MULTICAST_SESSION_CLASS_C:
+            case MODEM_E_LORAWAN_EVENT_NEW_MULTICAST_SESSION_CLASS_C:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: MULTICAST CLASS_C STOP\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_NEW_MULTICAST_SESSION_CLASS_B:
+            case MODEM_E_LORAWAN_EVENT_NEW_MULTICAST_SESSION_CLASS_B:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: MULTICAST CLASS_B STOP\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_NO_MORE_MULTICAST_SESSION_CLASS_C:
+            case MODEM_E_LORAWAN_EVENT_NO_MORE_MULTICAST_SESSION_CLASS_C:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: New MULTICAST CLASS_C\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
 
-            case LR1121_MODEM_LORAWAN_EVENT_NO_MORE_MULTICAST_SESSION_CLASS_B:
+            case MODEM_E_LORAWAN_EVENT_NO_MORE_MULTICAST_SESSION_CLASS_B:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: New MULTICAST CLASS_B\n\n", HAL_DBG_TRACE_COLOR_BLUE );
                 break;
+
+            case MODEM_E_LORAWAN_EVENT_RELAY_TX_DYNAMIC:
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: RELAY_TX_DYNAMIC\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                break;
+
+            case MODEM_E_LORAWAN_EVENT_RELAY_TX_MODE:
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: RELAY_TX_MODE\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                break;
+
+            case MODEM_E_LORAWAN_EVENT_RELAY_TX_SYNC:
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: RELAY_TX_SYNC\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                break;
+
+            case MODEM_E_LORAWAN_EVENT_ALC_SYNC_TIME:
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: ALC_SYNC_TIME\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                break;
+
+            case MODEM_E_LORAWAN_EVENT_FUOTA_DONE:
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: FUOTA_DONE\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                break;
+
+            case MODEM_E_LORAWAN_EVENT_TEST_MODE:
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: TEST_MODE\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                break;
+                
+            case MODEM_E_LORAWAN_EVENT_DR_BACKOFF_LIMIT:
+                HAL_DBG_TRACE_MSG_COLOR( "Event received: DR_BACKOFF_LIMIT\n\n", HAL_DBG_TRACE_COLOR_BLUE );
+                break;
+            
             default:
                 HAL_DBG_TRACE_INFO( "Event not handled 0x%02x\n", current_event.event_type );
                 break;
             }
         }
-    } while( rc_event != LR1121_MODEM_RESPONSE_CODE_NO_EVENT );
+    } while( rc_event != MODEM_E_RESPONSE_CODE_NO_EVENT );
 }
 
 static void user_button_callback( void* context )
@@ -467,14 +496,14 @@ static void send_uplinks_counter_on_port( uint8_t port )
     uplink_sending = true;
 }
 
-static lr1121_modem_response_code_t send_frame( const uint8_t* tx_frame_buffer, const uint8_t tx_frame_buffer_size,
-                                                uint8_t port, const lr1121_modem_uplink_type_t tx_confirmed )
+static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const uint8_t tx_frame_buffer_size,
+                                                uint8_t port, const modem_e_uplink_type_t tx_confirmed )
 {
-    lr1121_modem_response_code_t modem_response_code = LR1121_MODEM_RESPONSE_CODE_OK;
+    modem_e_response_code_t modem_response_code = MODEM_E_RESPONSE_CODE_OK;
     uint8_t                      tx_max_payload;
     int32_t                      duty_cycle;
 
-    lr1121_modem_get_duty_cycle_status( &lr1121, &duty_cycle );
+    modem_e_get_duty_cycle_status( &modem_e, &duty_cycle );
 
     if( duty_cycle < 0 )
     {
@@ -482,34 +511,34 @@ static lr1121_modem_response_code_t send_frame( const uint8_t* tx_frame_buffer, 
         return modem_response_code;
     }
 
-    modem_response_code = lr1121_modem_get_next_tx_max_payload( &lr1121, &tx_max_payload );
-    if( modem_response_code != LR1121_MODEM_RESPONSE_CODE_OK )
+    modem_response_code = modem_e_get_next_tx_max_payload( &modem_e, &tx_max_payload );
+    if( modem_response_code != MODEM_E_RESPONSE_CODE_OK )
     {
-        HAL_DBG_TRACE_ERROR( "\n\n lr1121_modem_get_next_tx_max_payload RC : %d \n\n", modem_response_code );
+        HAL_DBG_TRACE_ERROR( "\n\n modem_e_get_next_tx_max_payload RC : %d \n\n", modem_response_code );
     }
 
     if( tx_frame_buffer_size > tx_max_payload )
     {
         /* Send empty frame in order to flush MAC commands */
         HAL_DBG_TRACE_PRINTF( "\n\n APP DATA > MAX PAYLOAD AVAILABLE (%d bytes) \n\n", tx_max_payload );
-        modem_response_code = lr1121_modem_request_tx( &lr1121, port, tx_confirmed, NULL, 0 );
+        modem_response_code = modem_e_request_tx( &modem_e, port, tx_confirmed, NULL, 0 );
     }
     else
     {
         modem_response_code =
-            lr1121_modem_request_tx( &lr1121, port, tx_confirmed, tx_frame_buffer, tx_frame_buffer_size );
+            modem_e_request_tx( &modem_e, port, tx_confirmed, tx_frame_buffer, tx_frame_buffer_size );
     }
 
-    if( modem_response_code == LR1121_MODEM_RESPONSE_CODE_OK )
+    if( modem_response_code == MODEM_E_RESPONSE_CODE_OK )
     {
-        HAL_DBG_TRACE_INFO( "lr1121 MODEM-E REQUEST TX \n\n" );
+        HAL_DBG_TRACE_INFO( "modem_e MODEM-E REQUEST TX \n\n" );
         HAL_DBG_TRACE_MSG( "TX DATA     : " );
         print_hex_buffer( tx_frame_buffer, tx_frame_buffer_size );
         HAL_DBG_TRACE_MSG( "\n\n\n" )
     }
     else
     {
-        HAL_DBG_TRACE_ERROR( "lr1121 MODEM-E REQUEST TX ERROR CMD, modem_response_code : %d \n\n\n",
+        HAL_DBG_TRACE_ERROR( "modem_e MODEM-E REQUEST TX ERROR CMD, modem_response_code : %d \n\n\n",
                              modem_response_code );
     }
     return modem_response_code;

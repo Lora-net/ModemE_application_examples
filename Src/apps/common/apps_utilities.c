@@ -43,8 +43,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "apps_utilities.h"
-#include "lr1121_modem_lorawan.h"
-#include "lr1121_modem_modem.h"
+#include "modem_e_lorawan.h"
+#include "modem_e_modem.h"
 #include "smtc_hal_dbg_trace.h"
 
 /*
@@ -125,7 +125,7 @@ void print_ascii_buffer( const uint8_t* buffer, uint16_t size )
     HAL_DBG_TRACE_PRINTF( "\n\n" );
 }
 
-void print_version( lr1121_modem_version_t modem_version )
+void print_version( modem_e_version_t modem_version )
 {
     HAL_DBG_TRACE_INFO( "###### ===== lr1121 MODEM-E VERSION ==== ######\n\n\n" );
     HAL_DBG_TRACE_PRINTF( "USE CASE   : %02X\n", modem_version.use_case );
@@ -166,23 +166,23 @@ void print_lorawan_credentials( const uint8_t* dev_eui, const uint8_t* join_eui,
     HAL_DBG_TRACE_PRINTF( "\n\n" );
 }
 
-void modem_status_to_string( lr1121_modem_lorawan_status_t modem_status )
+void modem_status_to_string( modem_e_lorawan_status_t modem_status )
 {
     HAL_DBG_TRACE_MSG( "Modem status : " );
 
-    if( ( modem_status & LR1121_LORAWAN_CRASH ) == LR1121_LORAWAN_CRASH )
+    if( ( modem_status & MODEM_E_LORAWAN_CRASH ) == MODEM_E_LORAWAN_CRASH )
     {
         HAL_DBG_TRACE_MSG( "CRASH " );
     }
-    if( ( modem_status & LR1121_LORAWAN_JOINED ) == LR1121_LORAWAN_JOINED )
+    if( ( modem_status & MODEM_E_LORAWAN_JOINED ) == MODEM_E_LORAWAN_JOINED )
     {
         HAL_DBG_TRACE_MSG( "JOINED " );
     }
-    if( ( modem_status & LR1121_LORAWAN_SUSPEND ) == LR1121_LORAWAN_SUSPEND )
+    if( ( modem_status & MODEM_E_LORAWAN_SUSPEND ) == MODEM_E_LORAWAN_SUSPEND )
     {
         HAL_DBG_TRACE_MSG( "SUSPEND " );
     }
-    if( ( modem_status & LR1121_LORAWAN_JOINING ) == LR1121_LORAWAN_JOINING )
+    if( ( modem_status & MODEM_E_LORAWAN_JOINING ) == MODEM_E_LORAWAN_JOINING )
     {
         HAL_DBG_TRACE_MSG( "JOINING " );
     }
@@ -190,12 +190,12 @@ void modem_status_to_string( lr1121_modem_lorawan_status_t modem_status )
     HAL_DBG_TRACE_MSG( "\n\n\n" );
 }
 
-void get_and_print_lorawan_region_from_modem( const void* context, lr1121_modem_regions_t* modem_region )
+void get_and_print_lorawan_region_from_modem( const void* context, modem_e_regions_t* modem_region )
 {
     // 1. Get the region from modem
-    lr1121_modem_regions_t             local_region  = LR1121_LORAWAN_REGION_EU868;
-    const lr1121_modem_response_code_t response_code = lr1121_modem_get_region( context, &local_region );
-    if( response_code == LR1121_MODEM_RESPONSE_CODE_OK )
+    modem_e_regions_t             local_region  = MODEM_E_LORAWAN_REGION_EU868;
+    const modem_e_response_code_t response_code = modem_e_get_region( context, &local_region );
+    if( response_code == MODEM_E_RESPONSE_CODE_OK )
     {
         // 2a. If the get from the modem is successful print it.
         //     And the output pointer is not null: return the region
@@ -208,71 +208,71 @@ void get_and_print_lorawan_region_from_modem( const void* context, lr1121_modem_
     else
     {
         // 2b. If the get from modem failed: print an error message
-        HAL_DBG_TRACE_INFO( "Error on lr1121_modem_get_region, get response code: %d\n", response_code );
+        HAL_DBG_TRACE_INFO( "Error on modem_e_get_region, get response code: %d\n", response_code );
     }
 }
 
-void print_lorawan_region( lr1121_modem_regions_t region )
+void print_lorawan_region( modem_e_regions_t region )
 {
     switch( region )
     {
-    case LR1121_LORAWAN_REGION_EU868:
+    case MODEM_E_LORAWAN_REGION_EU868:
     {
         HAL_DBG_TRACE_MSG( "REGION      : EU868\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_US915:
+    case MODEM_E_LORAWAN_REGION_US915:
     {
         HAL_DBG_TRACE_MSG( "REGION      : US915\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_AU915:
+    case MODEM_E_LORAWAN_REGION_AU915:
     {
         HAL_DBG_TRACE_MSG( "REGION      : AU915\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_AS923_GRP1:
+    case MODEM_E_LORAWAN_REGION_AS923_GRP1:
     {
         HAL_DBG_TRACE_MSG( "REGION      : AS923_GRP1\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_CN470:
+    case MODEM_E_LORAWAN_REGION_CN470:
     {
         HAL_DBG_TRACE_MSG( "REGION      : CN470\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_AS923_GRP2:
+    case MODEM_E_LORAWAN_REGION_AS923_GRP2:
     {
         HAL_DBG_TRACE_MSG( "REGION      : AS923_GRP2\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_AS923_GRP3:
+    case MODEM_E_LORAWAN_REGION_AS923_GRP3:
     {
         HAL_DBG_TRACE_MSG( "REGION      : AS923_GRP3\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_AS923_GRP4:
+    case MODEM_E_LORAWAN_REGION_AS923_GRP4:
     {
         HAL_DBG_TRACE_MSG( "REGION      : AS923_GRP4\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_IN865:
+    case MODEM_E_LORAWAN_REGION_IN865:
     {
         HAL_DBG_TRACE_MSG( "REGION      : IN865\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_KR920:
+    case MODEM_E_LORAWAN_REGION_KR920:
     {
         // HAL_DBG_TRACE_MSG( "LBT         : ACTIVATE LBT\n\n" );
         HAL_DBG_TRACE_MSG( "REGION      : KR920\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_RU864:
+    case MODEM_E_LORAWAN_REGION_RU864:
     {
         HAL_DBG_TRACE_MSG( "REGION      : RU864\n\n\n" );
         break;
     }
-    case LR1121_LORAWAN_REGION_WW2G4:
+    case MODEM_E_LORAWAN_REGION_WW2G4:
     {
         HAL_DBG_TRACE_MSG( "REGION      : WW2G4\n\n\n" );
         break;
@@ -283,9 +283,9 @@ void print_lorawan_region( lr1121_modem_regions_t region )
     }
 }
 
-void print_certification( lr1121_modem_certification_mode_t certif_running )
+void print_certification( modem_e_certification_mode_t certif_running )
 {
-    if( certif_running == LR1121_MODEM_CERTIFICATION_MODE_ENABLE )
+    if( certif_running == MODEM_E_CERTIFICATION_MODE_ENABLE )
     {
         HAL_DBG_TRACE_INFO( "###### ===================================== ######\n" );
         HAL_DBG_TRACE_INFO( "###### ===== CERTIFICATION MODE ENABLED ==== ######\n" );
@@ -301,19 +301,19 @@ void print_certification( lr1121_modem_certification_mode_t certif_running )
 
 void get_and_print_crashlog( const void* context )
 {
-    lr1121_modem_response_code_t  response_code = LR1121_MODEM_RESPONSE_CODE_OK;
-    lr1121_modem_lorawan_status_t modem_status;
-    response_code = lr1121_modem_get_status( context, &modem_status );
+    modem_e_response_code_t  response_code = MODEM_E_RESPONSE_CODE_OK;
+    modem_e_lorawan_status_t modem_status;
+    response_code = modem_e_get_status( context, &modem_status );
     // Check if the crashlog bit is set in modem_status
-    if( response_code == LR1121_MODEM_RESPONSE_CODE_OK )
+    if( response_code == MODEM_E_RESPONSE_CODE_OK )
     {
-        if( ( modem_status & LR1121_LORAWAN_CRASH ) == LR1121_LORAWAN_CRASH )
+        if( ( modem_status & MODEM_E_LORAWAN_CRASH ) == MODEM_E_LORAWAN_CRASH )
         {
-            lr1121_modem_crashlog_status_t status_crashlog = LR1121_NO_NEW_CRASHLOG;
+            modem_e_crashlog_status_t status_crashlog = MODEM_E_NO_NEW_CRASHLOG;
             uint8_t                        crashlog[242]   = { 0 };
             // Get the crashlog
-            response_code = lr1121_modem_get_crashlog( context, &status_crashlog, crashlog );
-            if( ( response_code == LR1121_MODEM_RESPONSE_CODE_OK ) && ( status_crashlog == LR1121_NEW_CRASHLOG ) )
+            response_code = modem_e_get_crashlog( context, &status_crashlog, crashlog );
+            if( ( response_code == MODEM_E_RESPONSE_CODE_OK ) && ( status_crashlog == MODEM_E_NEW_CRASHLOG ) )
             {
                 HAL_DBG_TRACE_INFO( "###### ===================================== ######\n" );
                 HAL_DBG_TRACE_INFO( "###### =========== MODEM CRASHED =========== ######\n" );
@@ -325,7 +325,7 @@ void get_and_print_crashlog( const void* context )
     }
     else
     {
-        HAL_DBG_TRACE_INFO( "Error on lr1121_modem_get_status, get response code: %d\n", response_code );
+        HAL_DBG_TRACE_INFO( "Error on modem_e_get_status, get response code: %d\n", response_code );
     }
 }
 /*
