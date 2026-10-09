@@ -200,7 +200,7 @@ static void timer_insert_timer( timer_event_t* obj )
     timer_event_t* cur  = timer_list_head;
     timer_event_t* next = timer_list_head->next;
 
-    while( cur->next != NULL )
+    while( next != NULL )
     {
         if( obj->timestamp > next->timestamp )
         {
@@ -271,12 +271,15 @@ void timer_irq_handler( void )
     }
 
     /* Remove all the expired object from the list */
-    while( ( timer_list_head != NULL ) && ( timer_list_head->timestamp < hal_rtc_get_timer_elapsed_value( ) ) )
+    uint32_t safety_counter = 0;
+    while( ( timer_list_head != NULL ) && ( timer_list_head->timestamp < hal_rtc_get_timer_elapsed_value( ) ) &&
+           ( safety_counter < 64 ) )
     {
         cur             = timer_list_head;
         timer_list_head = timer_list_head->next;
         cur->is_started = false;
         execute_callback( cur->callback, cur->context );
+        safety_counter++;
     }
 
     /* Start the next timer_list_head if it exists AND NOT running */

@@ -413,7 +413,7 @@ static void event_process( void* context )
                     HAL_DBG_TRACE_INFO( "Class B enabled and beacon received\n" )
                     HAL_DBG_TRACE_INFO( "Send a Tx to enable class B session on NS\n\n" )
                     // Send an uplink to enable the unicast class B session on NS
-                    ASSERT_SMTC_MODEM_RC( send_empty_uplink( 10, MODEM_E_UNCONFIRMED_TX ) );
+                    ASSERT_SMTC_MODEM_RC( send_empty_uplink( 10, MODEM_E_UPLINK_UNCONFIRMED ) );
                 }
                 break;
 
@@ -520,7 +520,7 @@ static void main_handle_button_pushed( void* context )
 static modem_e_response_code_t send_empty_uplink( uint8_t port, const modem_e_uplink_type_t tx_confirmed )
 {
     modem_e_response_code_t modem_response_code = MODEM_E_RESPONSE_CODE_OK;
-    int32_t                      duty_cycle;
+    int32_t                      duty_cycle = 0;
 
     ASSERT_SMTC_MODEM_RC( modem_e_get_duty_cycle_status( &modem_e, &duty_cycle ) );
 
@@ -534,7 +534,7 @@ static modem_e_response_code_t send_empty_uplink( uint8_t port, const modem_e_up
     if( modem_response_code == MODEM_E_RESPONSE_CODE_OK )
     {
         HAL_DBG_TRACE_INFO( "modem_e MODEM-E REQUEST EMPTY TX \n\n" );
-        HAL_DBG_TRACE_MSG( "\n\n\n" )
+        HAL_DBG_TRACE_MSG( "\n\n\n" );
     }
     else
     {

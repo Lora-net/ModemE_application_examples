@@ -1,6 +1,6 @@
 # FUOTA example
 
-This example of Firmware Upgrade Over the Air (FUOTA) demonstrates how to run pre-certification suite with LoRaWAN Certification Test Tool (LCTT) for FUOTA with LR1121 Modem-E v2.
+This example of Firmware Upgrade Over the Air (FUOTA) demonstrates how to run pre-certification suite with LoRaWAN Certification Test Tool (LCTT) for FUOTA with Modem-E v2 (LR1121/LR1110).
 
 ## Scope
 
@@ -14,7 +14,7 @@ And it does not cover actual firmware management.
 
 ### References to LoRaWAN packages
 
-The LCTT usage here allows to confirm the compatibility of LR1121 Modem-E v2 behavior against the following LoraWAN packages:
+The LCTT usage here allows to confirm the compatibility of Modem-E v2 (LR1121/LR1110) behavior against the following LoraWAN packages:
 
 - `TS005-2.0.0 Remote Multicast Setup`
 - `TS003-2.0.0 Application Layer Clock Synchronization`
@@ -30,7 +30,7 @@ Concerning LCTT, the following is required:
 Concerning the hardware:
 
 - a Nucleo board STM32L476RG
-- an LR1121 shield flashed with Modem-E v2
+- an LR1121 or LR1110 shield flashed with Modem-E v2
 - a gateway
 - a computer that can run LCTT
 

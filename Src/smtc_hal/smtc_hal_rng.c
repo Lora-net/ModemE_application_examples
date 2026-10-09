@@ -129,8 +129,11 @@ void HAL_RNG_MspInit( RNG_HandleTypeDef* hrng )
     /* Select MSI output as RNG clock source */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RNG;
     PeriphClkInitStruct.RngClockSelection = RCC_RNGCLKSOURCE_MSI;
-    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
-    
+    if( HAL_RCCEx_PeriphCLKConfig( &PeriphClkInitStruct ) != HAL_OK )
+    {
+        hal_mcu_panic( );
+    }
+
     /* RNG Peripheral clock enable */
     __RNG_CLK_ENABLE( );
 }

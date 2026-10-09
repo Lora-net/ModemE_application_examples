@@ -348,7 +348,7 @@ modem_e_modem_hal_status_t modem_e_modem_hal_reset( const void* context )
     hal_gpio_set_value( ( ( modem_e_t* ) context )->reset.pin, 0 );
     HAL_Delay( 1 );
     hal_gpio_set_value( ( ( modem_e_t* ) context )->reset.pin, 1 );
-    while( !event_received )
+    while( !event_received && !modem_e_reset_timeout )
     {
         rc = modem_e_get_event( context, &events );
         if( rc == MODEM_E_RESPONSE_CODE_OK )
@@ -358,6 +358,12 @@ modem_e_modem_hal_status_t modem_e_modem_hal_reset( const void* context )
                 event_received = true;
             }
         }
+    }
+    timer_stop( &modem_e_reset_timeout_timer );
+
+    if( modem_e_reset_timeout )
+    {
+        return MODEM_E_MODEM_HAL_STATUS_ERROR;
     }
     return MODEM_E_MODEM_HAL_STATUS_OK;
 }

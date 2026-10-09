@@ -189,11 +189,10 @@ static const uint8_t MULTICAST_KEYS[NUMBER_MULTICAST_SESSION][3][16] = {
  *  MODEM_E_CLASS_B_PING_SLOT_64_S
  *  MODEM_E_CLASS_B_PING_SLOT_128_S
  */
+#if( MULTICAST_SESSION_CLASS == LORAWAN_CLASS_B )
 static const uint8_t MULTICAST_PING_SLOT_PERIODICITY[NUMBER_MULTICAST_SESSION] = {
     MODEM_E_CLASS_B_PING_SLOT_8_S, MODEM_E_CLASS_B_PING_SLOT_16_S
 };
-
-#if( MULTICAST_SESSION_CLASS == LORAWAN_CLASS_B )
 /**
  * @brief Default multicast class b frequency per region opcode
  * The value 0 indicates that the multicast frequency should hop according to the beacon frequency.
@@ -338,7 +337,7 @@ int main( void )
             main_handle_button_pushed( &modem_e );
         }
 
-        if( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_B )
+#if( MULTICAST_SESSION_CLASS == LORAWAN_CLASS_B )
         {
             modem_e_multicast_class_b_status_t multicast_status;
             ASSERT_SMTC_MODEM_RC( modem_e_get_multicast_class_b_session_status( &modem_e, 0, &multicast_status ) );
@@ -351,6 +350,7 @@ int main( void )
                 HAL_DBG_TRACE_PRINTF( "You can now send multicast downlinks\n\n" );
             }
         }
+#endif
 
         hal_mcu_disable_irq( );
         if( ( user_button_is_press == false ) )
@@ -429,7 +429,7 @@ static void event_process( void* context )
                 ASSERT_SMTC_MODEM_RC( modem_e_set_adr_profile(
                     context, MODEM_E_ADR_PROFILE_NETWORK_SERVER_CONTROLLED, adr_custom_list ) );
 
-                ASSERT_SMTC_MODEM_RC( modem_e_set_class( context, MULTICAST_SESSION_CLASS ) );
+                ASSERT_SMTC_MODEM_RC( modem_e_set_class( context, ( modem_e_classes_t ) MULTICAST_SESSION_CLASS ) );
                 for( uint8_t i = 0; i < NUMBER_MULTICAST_SESSION; i++ )
                 {
                     uint32_t grp_addr = ( MULTICAST_KEYS[i][0][0] << 24 ) | ( MULTICAST_KEYS[i][0][1] << 16 ) |
@@ -437,13 +437,13 @@ static void event_process( void* context )
                     ASSERT_SMTC_MODEM_RC( modem_e_set_multicast_group_config(
                         context, i, grp_addr, MULTICAST_KEYS[i][1], MULTICAST_KEYS[i][2] ) );
                 }
-                if( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_C )
+#if( MULTICAST_SESSION_CLASS == LORAWAN_CLASS_C )
+                unicast_ready = true;
                 {
-                    unicast_ready = true;
-                    // Send an uplink to enable the unicast class C session on NS
                     uint8_t buff[8] = { 0 };
-                    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, 10, MODEM_E_UNCONFIRMED_TX ) );
+                    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, 10, MODEM_E_UPLINK_UNCONFIRMED ) );
                 }
+#endif
                 break;
 
             case MODEM_E_LORAWAN_EVENT_TX_DONE:
@@ -517,13 +517,14 @@ static void event_process( void* context )
 
             case MODEM_E_LORAWAN_EVENT_CLASS_B_STATUS:
                 HAL_DBG_TRACE_MSG_COLOR( "Event received: CLASS_B_STATUS\n\n", HAL_DBG_TRACE_COLOR_BLUE );
-                if( ( current_event.data ) && ( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_B ) )
+#if( MULTICAST_SESSION_CLASS == LORAWAN_CLASS_B )
+                if( current_event.data )
                 {
                     unicast_ready = true;
-                    // Send an uplink to enable the unicast class C session on NS
                     uint8_t buff[8] = { 0 };
-                    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, 10, MODEM_E_UNCONFIRMED_TX ) );
+                    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, 10, MODEM_E_UPLINK_UNCONFIRMED ) );
                 }
+#endif
                 break;
 
             case MODEM_E_LORAWAN_EVENT_LORAWAN_MAC_TIME:
@@ -606,14 +607,11 @@ static void main_handle_button_pushed( void* context )
         if( multicast_started )
         {
             // The multicast session is started, the action is to stop the session
-            if( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_B )
-            {
-                ASSERT_SMTC_MODEM_RC( modem_e_stop_all_session_multicast_class_b( context ) );
-            }
-            else
-            {
-                ASSERT_SMTC_MODEM_RC( modem_e_stop_all_session_multicast_class_c( context ) );
-            }
+#if( MULTICAST_SESSION_CLASS == LORAWAN_CLASS_B )
+            ASSERT_SMTC_MODEM_RC( modem_e_stop_all_session_multicast_class_b( context ) );
+#else
+            ASSERT_SMTC_MODEM_RC( modem_e_stop_all_session_multicast_class_c( context ) );
+#endif
             multicast_started = false;
             HAL_DBG_TRACE_INFO( "###### ===== STOP MULTICAST SESSION(S) ==== ######\n\n\n" );
         }
@@ -622,21 +620,17 @@ static void main_handle_button_pushed( void* context )
             // The multicast session is not started, the action is to start the session
             for( uint8_t i = 0; i < NUMBER_MULTICAST_SESSION; i++ )
             {
-                if( MULTICAST_SESSION_CLASS == MODEM_E_LORAWAN_CLASS_B )
-                {
-                    ASSERT_SMTC_MODEM_RC( modem_e_start_session_multicast_class_b(
-                        context, i, MULTICAST_FREQUENCY, MULTICAST_DATARATE, MULTICAST_PING_SLOT_PERIODICITY[i] ) );
-                    HAL_DBG_TRACE_INFO( "###### ===== START MULTICAST SESSION n°%d ==== ######\n\n\n", i + 1 );
-                    HAL_DBG_TRACE_PRINTF( "Wait for beacon reception...\n\n" );
-                }
-                else
-                {
-                    ASSERT_SMTC_MODEM_RC( modem_e_start_session_multicast_class_c( context, i, MULTICAST_FREQUENCY,
-                                                                                        MULTICAST_DATARATE ) );
-
-                    HAL_DBG_TRACE_INFO( "###### ===== START MULTICAST SESSION n°%d ==== ######\n\n\n", i + 1 );
-                    HAL_DBG_TRACE_PRINTF( "You can now send multicast downlinks\n\n" );
-                }
+#if( MULTICAST_SESSION_CLASS == LORAWAN_CLASS_B )
+                ASSERT_SMTC_MODEM_RC( modem_e_start_session_multicast_class_b(
+                    context, i, MULTICAST_FREQUENCY, MULTICAST_DATARATE, MULTICAST_PING_SLOT_PERIODICITY[i] ) );
+                HAL_DBG_TRACE_INFO( "###### ===== START MULTICAST SESSION n°%d ==== ######\n\n\n", i + 1 );
+                HAL_DBG_TRACE_PRINTF( "Wait for beacon reception...\n\n" );
+#else
+                ASSERT_SMTC_MODEM_RC( modem_e_start_session_multicast_class_c( context, i, MULTICAST_FREQUENCY,
+                                                                                    MULTICAST_DATARATE ) );
+                HAL_DBG_TRACE_INFO( "###### ===== START MULTICAST SESSION n°%d ==== ######\n\n\n", i + 1 );
+                HAL_DBG_TRACE_PRINTF( "You can now send multicast downlinks\n\n" );
+#endif
             }
             multicast_started = true;
         }
@@ -653,7 +647,7 @@ static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const
 {
     modem_e_response_code_t modem_response_code = MODEM_E_RESPONSE_CODE_OK;
     uint8_t                      tx_max_payload;
-    int32_t                      duty_cycle;
+    int32_t                      duty_cycle = 0;
 
     modem_e_get_duty_cycle_status( &modem_e, &duty_cycle );
 
@@ -686,7 +680,7 @@ static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const
         HAL_DBG_TRACE_INFO( "modem_e MODEM-E REQUEST TX \n\n" );
         HAL_DBG_TRACE_MSG( "TX DATA     : " );
         print_hex_buffer( tx_frame_buffer, tx_frame_buffer_size );
-        HAL_DBG_TRACE_MSG( "\n\n\n" )
+        HAL_DBG_TRACE_MSG( "\n\n\n" );
     }
     else
     {

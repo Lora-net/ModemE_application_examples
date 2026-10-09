@@ -203,7 +203,7 @@ void get_and_print_lorawan_region_from_modem( const void* context, modem_e_regio
         {
             *modem_region = local_region;
         }
-        print_lorawan_region( *modem_region );
+        print_lorawan_region( local_region );
     }
     else
     {
@@ -301,8 +301,8 @@ void print_certification( modem_e_certification_mode_t certif_running )
 
 void get_and_print_crashlog( const void* context )
 {
-    modem_e_response_code_t  response_code = MODEM_E_RESPONSE_CODE_OK;
-    modem_e_lorawan_status_t modem_status;
+    modem_e_response_code_t          response_code = MODEM_E_RESPONSE_CODE_OK;
+    modem_e_lorawan_status_bitmask_t modem_status;
     response_code = modem_e_get_status( context, &modem_status );
     // Check if the crashlog bit is set in modem_status
     if( response_code == MODEM_E_RESPONSE_CODE_OK )

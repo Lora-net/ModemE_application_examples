@@ -255,7 +255,7 @@ void SystemInit(void)
   */
 void SystemCoreClockUpdate(void)
 {
-  uint32_t tmp = 0U, msirange = 0U, pllvco = 0U, pllr = 2U, pllsource = 0U, pllm = 2U;
+  uint32_t tmp = 0U, msirange = 0U, pllvco = 0U, pllr = 0U, pllsource = 0U, pllm = 0U;
 
   /* Get MSI Range frequency--------------------------------------------------*/
   if((RCC->CR & RCC_CR_MSIRGSEL) == RESET)
@@ -267,6 +267,10 @@ void SystemCoreClockUpdate(void)
     msirange = (RCC->CR & RCC_CR_MSIRANGE) >> 4U;
   }
   /*MSI frequency range in HZ*/
+  if( msirange >= ( sizeof( MSIRangeTable ) / sizeof( MSIRangeTable[0] ) ) )
+  {
+    msirange = ( sizeof( MSIRangeTable ) / sizeof( MSIRangeTable[0] ) ) - 1U;
+  }
   msirange = MSIRangeTable[msirange];
 
   /* Get SYSCLK source -------------------------------------------------------*/

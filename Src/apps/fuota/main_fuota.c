@@ -241,7 +241,7 @@ int main( void )
             user_button_is_press = false;
             HAL_DBG_TRACE_MSG( "Button pushed\r\n" );
 
-            modem_e_lorawan_status_t modem_status;
+            modem_e_lorawan_status_bitmask_t modem_status;
             modem_e_get_status( &modem_e, &modem_status );
             // Check if the device has already joined a network
             if( ( modem_status & MODEM_E_LORAWAN_JOINED ) == MODEM_E_LORAWAN_JOINED )
@@ -506,7 +506,7 @@ static void user_button_callback( void* context )
 static modem_e_response_code_t send_empty_uplink( const modem_e_uplink_type_t tx_confirmed )
 {
     modem_e_response_code_t modem_response_code = MODEM_E_RESPONSE_CODE_OK;
-    int32_t                      duty_cycle;
+    int32_t                      duty_cycle = 0;
 
     modem_e_get_duty_cycle_status( &modem_e, &duty_cycle );
 

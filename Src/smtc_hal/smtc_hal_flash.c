@@ -122,12 +122,12 @@ uint32_t flash_init( void )
 uint8_t flash_erase_page( uint32_t addr, uint8_t nb_page )
 {
     uint8_t  status          = SMTC_SUCCESS;
-    uint8_t  hal_status      = SMTC_SUCCESS;
+    uint8_t  hal_status      = HAL_OK;
     uint32_t first_user_page = 0, nb_of_pages_max = 0;
     uint32_t page_error            = 0;
     uint8_t  flash_operation_retry = 0;
 
-    FLASH_EraseInitTypeDef EraseInitStruct;
+    FLASH_EraseInitTypeDef EraseInitStruct = { 0 };
 
     /* Unlock the Flash to enable the flash control register access *************/
     HAL_FLASH_Unlock( );
@@ -175,20 +175,7 @@ uint8_t flash_erase_page( uint32_t addr, uint8_t nb_page )
 
     if( flash_operation_retry >= FLASH_OPERATION_MAX_RETRY )
     {
-        /*
-          Error occurred while  erase.
-          User can add here some code to deal with this error.
-          PageError will contain the faulty  and then to know the code error on this ,
-          user can call function 'HAL_FLASH_GetError()'
-        */
-        /* Infinite loop */
-        while( 1 )
-        {
-        }
-    }
-    else
-    {
-        flash_operation_retry = 0;
+        hal_mcu_panic( );
     }
 
     /* Lock the Flash to disable the flash control register access (recommended
@@ -201,12 +188,12 @@ uint8_t flash_erase_page( uint32_t addr, uint8_t nb_page )
 uint8_t flash_force_erase_page( uint32_t addr, uint8_t nb_page )
 {
     uint8_t  status                = SMTC_SUCCESS;
-    uint8_t  hal_status            = SMTC_SUCCESS;
+    uint8_t  hal_status            = HAL_OK;
     uint32_t first_user_page       = 0;
     uint32_t page_error            = 0;
     uint8_t  flash_operation_retry = 0;
 
-    FLASH_EraseInitTypeDef EraseInitStruct;
+    FLASH_EraseInitTypeDef EraseInitStruct = { 0 };
 
     /* Unlock the Flash to enable the flash control register access *************/
     HAL_FLASH_Unlock( );
@@ -222,6 +209,7 @@ uint8_t flash_force_erase_page( uint32_t addr, uint8_t nb_page )
 
     /* Fill EraseInit structure*/
     EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
+    EraseInitStruct.Banks     = FLASH_BANK_1;
     EraseInitStruct.Page      = first_user_page;
     EraseInitStruct.NbPages   = nb_page;
 
@@ -237,20 +225,7 @@ uint8_t flash_force_erase_page( uint32_t addr, uint8_t nb_page )
 
     if( flash_operation_retry >= FLASH_OPERATION_MAX_RETRY )
     {
-        /*
-          Error occurred while  erase.
-          User can add here some code to deal with this error.
-          PageError will contain the faulty  and then to know the code error on this ,
-          user can call function 'HAL_FLASH_GetError()'
-        */
-        /* Infinite loop */
-        while( 1 )
-        {
-        }
-    }
-    else
-    {
-        flash_operation_retry = 0;
+        hal_mcu_panic( );
     }
 
     /* Lock the Flash to disable the flash control register access (recommended
@@ -262,8 +237,7 @@ uint8_t flash_force_erase_page( uint32_t addr, uint8_t nb_page )
 
 uint32_t flash_write_buffer( uint32_t addr, uint8_t* buffer, uint32_t size )
 {
-    uint8_t  status       = SMTC_SUCCESS;
-    uint8_t  hal_status   = SMTC_SUCCESS;
+    uint8_t  hal_status   = HAL_OK;
     uint32_t buffer_index = 0, nb_of_pages_max = 0, real_size = 0, addr_end = 0;
     uint64_t data64                = 0;
     uint8_t  flash_operation_retry = 0;
@@ -291,8 +265,7 @@ uint32_t flash_write_buffer( uint32_t addr, uint8_t* buffer, uint32_t size )
 
     if( ( flash_user_start_addr > addr ) || ( ( real_size / ADDR_FLASH_PAGE_SIZE ) > nb_of_pages_max ) )
     {
-        status = SMTC_FAIL;
-        return status;
+        return SMTC_FAIL;
     }
 
     /* Program the user Flash area word by word
@@ -314,12 +287,7 @@ uint32_t flash_write_buffer( uint32_t addr, uint8_t* buffer, uint32_t size )
 
         if( flash_operation_retry >= FLASH_OPERATION_MAX_RETRY )
         {
-            /* Error occurred while writing data in Flash memory.
-            User can add here some code to deal with this error */
-            /* Infinite loop */
-            while( 1 )
-            {
-            }
+            hal_mcu_panic( );
         }
         else
         {

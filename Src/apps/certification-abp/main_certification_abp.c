@@ -144,7 +144,7 @@ static modem_e_downlink_metadata_t rx_metadata     = { 0 };
 static uint8_t                          rx_remaining    = 0;
 
 static volatile bool                              user_button_is_press = false;
-static volatile modem_e_certification_mode_t certif_running       = false;
+static volatile modem_e_certification_mode_t certif_running       = MODEM_E_CERTIFICATION_MODE_DISABLE;
 static uint32_t                                   uplink_counter       = 0;
 static uint32_t                                   confirmed_counter    = 0;
 static bool                                       nvm_restored         = false;
@@ -446,8 +446,8 @@ static void event_process( void* context )
                 
                 uint32_t current_time = hal_rtc_get_time_ms( );
                 uint64_t elapsed_time = ( uint64_t ) current_time - timestamp_ms;
-                HAL_DBG_TRACE_INFO( "Current time: %lu, Elapsed time: %d ms\n",
-                                    ( unsigned long ) current_time, elapsed_time );
+                HAL_DBG_TRACE_INFO( "Current time: %lu, Elapsed time: %lu ms\n",
+                                    ( unsigned long ) current_time, ( unsigned long ) elapsed_time );
                 rc = modem_e_restore_state_snapshot_from_nvm( context, elapsed_time );
                 if( rc == MODEM_E_RESPONSE_CODE_OK )
                 {
@@ -512,7 +512,7 @@ static void send_uplinks_counter_on_port( uint8_t port )
     buff[1]         = ( confirmed_counter >> 16 ) & 0xFF;
     buff[2]         = ( confirmed_counter >> 8 ) & 0xFF;
     buff[3]         = ( confirmed_counter & 0xFF );
-    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, port, true ) );
+    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, port, MODEM_E_UPLINK_CONFIRMED ) );
     uplink_counter++;
 }
 
@@ -521,7 +521,7 @@ static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const
 {
     modem_e_response_code_t modem_response_code = MODEM_E_RESPONSE_CODE_OK;
     uint8_t                      tx_max_payload;
-    int32_t                      duty_cycle;
+    int32_t                      duty_cycle = 0;
 
     modem_e_get_duty_cycle_status( &modem_e, &duty_cycle );
 
@@ -553,7 +553,7 @@ static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const
         HAL_DBG_TRACE_INFO( "modem_e MODEM-E REQUEST TX \n\n" );
         HAL_DBG_TRACE_MSG( "TX DATA     : " );
         print_hex_buffer( tx_frame_buffer, tx_frame_buffer_size );
-        HAL_DBG_TRACE_MSG( "\n\n\n" )
+        HAL_DBG_TRACE_MSG( "\n\n\n" );
     }
     else
     {

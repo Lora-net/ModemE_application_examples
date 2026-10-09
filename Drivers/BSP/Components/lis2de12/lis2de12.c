@@ -228,7 +228,7 @@ int16_t acc_get_raw_z( void ) { return acceleration_mg[2]; }
 
 int16_t acc_get_temperature( void )
 {
-    uint16_t temperature;
+    uint16_t temperature = 0;
     uint8_t  is_ready = 0;
 
     lis2de12_temp_data_ready_get( &is_ready );
@@ -368,7 +368,11 @@ int32_t lis2de12_temperature_raw_get( uint16_t* raw_temp )
     int32_t ret;
     uint8_t buf_tmp;
 
-    ret       = lis2de12_read_reg( LIS2DE12_OUT_TEMP_L, &buf_tmp, 1 );
+    ret = lis2de12_read_reg( LIS2DE12_OUT_TEMP_L, &buf_tmp, 1 );
+    if( ret != 0 )
+    {
+        return ret;
+    }
     *raw_temp = buf_tmp;
 
     ret = lis2de12_read_reg( LIS2DE12_OUT_TEMP_H, &buf_tmp, 1 );

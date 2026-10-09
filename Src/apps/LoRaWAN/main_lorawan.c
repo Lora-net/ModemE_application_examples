@@ -234,7 +234,7 @@ int main( void )
         {
             user_button_is_press = false;
             HAL_DBG_TRACE_MSG( "Button pushed\n\n" );
-            modem_e_lorawan_status_t modem_status;
+            modem_e_lorawan_status_bitmask_t modem_status;
             modem_e_get_status( &modem_e, &modem_status );
             // Check if the device has already joined a network
             if( ( modem_status & MODEM_E_LORAWAN_JOINED ) == MODEM_E_LORAWAN_JOINED )
@@ -491,7 +491,7 @@ static void send_uplinks_counter_on_port( uint8_t port )
     buff[5]         = ( confirmed_counter >> 16 ) & 0xFF;
     buff[6]         = ( confirmed_counter >> 8 ) & 0xFF;
     buff[7]         = ( confirmed_counter & 0xFF );
-    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, port, true ) );
+    ASSERT_SMTC_MODEM_RC( send_frame( buff, 8, port, MODEM_E_UPLINK_CONFIRMED ) );
     uplink_counter++;  // Increment uplink counter
     uplink_sending = true;
 }
@@ -501,7 +501,7 @@ static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const
 {
     modem_e_response_code_t modem_response_code = MODEM_E_RESPONSE_CODE_OK;
     uint8_t                      tx_max_payload;
-    int32_t                      duty_cycle;
+    int32_t                      duty_cycle = 0;
 
     modem_e_get_duty_cycle_status( &modem_e, &duty_cycle );
 
@@ -534,7 +534,7 @@ static modem_e_response_code_t send_frame( const uint8_t* tx_frame_buffer, const
         HAL_DBG_TRACE_INFO( "modem_e MODEM-E REQUEST TX \n\n" );
         HAL_DBG_TRACE_MSG( "TX DATA     : " );
         print_hex_buffer( tx_frame_buffer, tx_frame_buffer_size );
-        HAL_DBG_TRACE_MSG( "\n\n\n" )
+        HAL_DBG_TRACE_MSG( "\n\n\n" );
     }
     else
     {

@@ -53,7 +53,7 @@ Supported values for `PING_SLOT_PERIODICITY`:
 
 ### 2.2. Join configuration
 
-The LR1121 is pre-provisioned with a ChipEUI/DevEUI and a JoinEUI. The application will use these identifiers if the `USE_LR11XX_CREDENTIALS` from [lorawan_commissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h) is set to true.
+The LR1121 and LR1110 are pre-provisioned with a ChipEUI/DevEUI and a JoinEUI. The application will use these identifiers if the `USE_LR11XX_CREDENTIALS` from [lorawan_commissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h) is set to true.
 
 Alternatively, you can provide your own EUIs in `Inc/apps/lorawan_commissioning/lorawan_commissioning.h` by setting `USE_LR11XX_CREDENTIALS` to false and changing the values of `LORAWAN_DEVICE_EUI`, `LORAWAN_JOIN_EUI`, `LORAWAN_NWK_KEY` and `LORAWAN_APP_KEY`.
 

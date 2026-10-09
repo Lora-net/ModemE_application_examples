@@ -1,9 +1,9 @@
-# LR1121 modem Application Example
+# Modem-E Application Examples
 
 ## 1. Description
 
-The LR1121 modem application example project contains several simple examples highlighting LoRa Basic Modem-E features.  
-This version of the examples supports LoRa Basics™ Modem-E **v2.1.0**.
+The Modem-E application example project contains several simple examples highlighting LoRa Basic Modem-E features.  
+This version of the examples supports LoRa Basics™ Modem-E **v2.1.0** and is compatible with both **LR1121** and **LR1110** transceivers.
 
 
 ### 1.1. Simple LoRaWAN Class A application
@@ -44,12 +44,12 @@ Please read the [fuota application documentation](Src/apps/fuota/README.md) for 
 
 ## 2. Hardware
 
-The example applications are designed to run with the LR1121 Evaluation Kit hardware, which includes:
+The example applications are designed to run with the LR1121 or LR1110 Evaluation Kit hardware, which includes:
 
 * NUCLEO-L476RG development board
-* LR1121 shield
+* LR1121 or LR1110 shield
 
-This project supports both versions of the LR1121 shield **with TCXO or without TCXO**
+This project supports both versions of the shield **with TCXO or without TCXO**
 
 ### 2.1. TCXO Configuration
 
@@ -80,7 +80,7 @@ To enable support for TCXO-based shields, you must modify the TCXO configuration
 
 ## 3. Usage
 
-Connect the NUCLEO board to a host PC via a USB cable. The USB connection will provide power for the LR1121 Evaluation Kit as well as serve as a serial communication link for the example application.
+Connect the NUCLEO board to a host PC via a USB cable. The USB connection will provide power for the Evaluation Kit as well as serve as a serial communication link for the example application.
 
 Use a terminal application configured with the following settings:
 
@@ -91,7 +91,7 @@ Use a terminal application configured with the following settings:
 
 Applications use the serial link to display information messages.  
 Modem keys are defined in [lorawan_commissioning.h](Inc/apps/lorawan_commissioning/lorawan_commissioning.h).
-To use the LR1121 modem production keys, update the USE_LR11XX_CREDENTIALS definition
+To use the LR11XX modem production keys, update the USE_LR11XX_CREDENTIALS definition
 
 ## 4. Build & Install
 
